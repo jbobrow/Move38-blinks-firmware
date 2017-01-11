@@ -1,4 +1,4 @@
-#include <AutomaTiles.h>
+#include <AutomaTile.h>
 #include <Arduino.h>
 #include "APA102C.h"
 
@@ -11,9 +11,9 @@ static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmiss
 
 int main(void) {
 	tileSetup();
-	
+
 	setup();
-	
+
 	prevTimer = getTimer();
 	while(1){
 		if(mode == running){
@@ -29,7 +29,7 @@ int main(void) {
 				updateLed();
 			}
 			prevTimer = getTimer();
-			
+
 			if(timeout>0){
 				if(prevTimer-sleepTimer>1000*timeout){
 					mode = sleep;
@@ -41,7 +41,7 @@ int main(void) {
 					wake = 0;
 				}
 			}
-			
+
 			loop();
 		}else if(mode==recieving){ /*
 			//disable A/D
@@ -49,13 +49,13 @@ int main(void) {
 			//set photo transistor interrupt to only trigger on specific direction
 			setDir(progDir);
 			//set recieving color
-			sendColor(LEDCLK, LEDDAT, recieveColor);	
+			sendColor(LEDCLK, LEDDAT, recieveColor);
 			//record time entering the mode for timeout
 			modeStart = getTimer();
 			while(mode==recieving){//stay in this mode until instructed to leave or timeout
 				uint32_t diff = getTimer()-modeStart;
 				if(diff>20*PULSE_WIDTH){//Been too long without any new data*/
-					mode = transmitting;					
+					mode = transmitting;
 				//}
 			//}
 		}else if(mode==transmitting){/*
@@ -78,16 +78,16 @@ int main(void) {
 					}
 					startTime = getTimer();
 				}
-				
+
 				for(i=0;i<bitsRcvd/8-1;i++){
 					datBuf[i]=comBuf[i];
 				}
 			}else{
 				bitsRcvd = 0;
 			}
-			
+
 			startTime = getTimer();
-			sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting			
+			sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting
 			while(getTimer()<startTime+5*PULSE_WIDTH);//pause for mode change
 			startTime = getTimer();
 			uint16_t timeDiff;
@@ -110,17 +110,17 @@ int main(void) {
 				}
 				if(bitNum>=bitsRcvd){
 					bitsRcvd = 0;
-				}				
+				}
 			}
 			while(getTimer()<startTime+2000);//pause for effect
-			
+
 			//done transmitting
 			//re-enable A/D
 			enAD();
 			//re-enable all phototransistors
 			setDirAll();
 			setState(0);*/
-			
+
 			mode = running;
 		}
 	}

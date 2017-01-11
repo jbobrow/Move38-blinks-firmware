@@ -1,13 +1,13 @@
 /*
- * AutomaTiles.h
+ * AutomaTile.h
  *
  * Created: 1/6/2016 11:56:26
  *  Author: Joshua
- */ 
+ */
 
 
-#ifndef AUTOMATILES_H_
-#define AUTOMATILES_H_
+#ifndef AUTOMATILE_H_
+#define AUTOMATILE_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -68,4 +68,4 @@ extern volatile uint8_t msgNum;
 extern volatile uint16_t bitsRcvd;
 extern volatile uint32_t modeStart;
 
-#endif /* AUTOMATILES_H_ */
+#endif /* AUTOMATILE_H_ */
