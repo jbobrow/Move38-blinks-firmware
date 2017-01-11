@@ -2,9 +2,6 @@
  * This test file, tests setColorRGB function.
  * Sweeping colors components from 0 to 255
  */
-
-uint8_t blue[3] = {0,0,255};
-uint8_t yellow[3] = {204,204,0};
                            
 void setup() {  
    setButtonCallback(button); 
