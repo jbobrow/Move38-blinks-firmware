@@ -1,11 +1,12 @@
 #include <AutomaTile.h>
 #include <Arduino.h>
+#include "color.h"
 #include "APA102C.h"
 
 uint32_t prevTimer;
-const uint8_t black[3] = {0x00, 0x00, 0x00};
-const uint8_t transmitColor[3] = {0xff, 0x55, 0x00};
-const uint8_t recieveColor[3] = {0x00, 0xff, 0x55};
+const rgb black = {0x00, 0x00, 0x00};
+const rgb transmitColor = {0xff, 0x55, 0x00};
+const rgb recieveColor = {0x00, 0xff, 0x55};
 
 static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmission of data
 
