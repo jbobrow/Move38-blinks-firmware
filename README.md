@@ -18,7 +18,7 @@ An example to show how to blink with a duration `blink(duration)`
 An example to show how to pulse with a duration `pulse(duration)`
 
 **fadeTo**
-An example to show how colors can transition smoothly between two colors `fadeTo(r, g, b, duration)`
+An example to show how colors can transition smoothly between two colors `fadeTo(r, g, b, duration)` **-WIP-**
 
 **getNeighbor**
 
