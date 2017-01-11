@@ -7,6 +7,10 @@
 4. open an example and press the checkmark to make sure it compiles
 5. Use an ISP of your choice and program your AutomaTiles!
 
+###API###
+
+[Here is a link to the API](API.md) (Work in Progress)
+
 ###Examples###
 
 The following examples are written using the AutomaTiles API for the Arduino IDE.
