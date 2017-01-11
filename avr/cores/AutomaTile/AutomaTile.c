@@ -72,8 +72,8 @@ struct Fading {
 	uint8_t inc;	// Hue increment per transition
 	bool positiveIncrement;
 	int16_t error;	// Bressenham algorithm error to enable up to 32768ms delays
-	uint16_t dh;	// hue differential and time differential
-	uint16_t dt;	// time differential is the amound of discrete time steps per fade transition
+	int16_t dh;	// hue differential and time differential
+	int16_t dt;	// time differential is the amound of discrete time steps per fade transition
 					// or the number of times that the LED will be refreshed for this transition
 } fading;
 
