@@ -1,18 +1,22 @@
-int btnPin = A2;
-int fetPin = 0;
-int fetPin2 = 1;
-
-    
-void setup() {      
-
-  pinMode(fetPin, OUTPUT); 
-  pinMode(fetPin2, OUTPUT);  
+/*
+ *  FadeTo Example
+ *  
+ *  This sketch fades color from red to cyan on the button press over the course of 5 seconds
+ *  
+ *  by Jonathan Bobrow
+ *  01.10.2017
+ */
+ 
+void setup() {
+   setButtonCallback(buttonPressed);
+   setColorRGB(255,255,255);
 }
-
 
 void loop() {
-
-  int a= analogRead(btnPin);
-  analogWrite(fetPin,a/4);
-  analogWrite(fetPin2,a/4);
 }
+
+void buttonPressed() {
+   setColorRGB(255, 0, 0);
+   fadeTo(0,255,255, 5000);
+}
+

@@ -1,23 +1,16 @@
 /*
- * This test file, tests setColorRGB function.
- * Sweeping colors components from 0 to 255
+ *  Blink Example
+ *  
+ *  This sketch sets the color to white(255, 255, 255), then blinks the RGB LED every 1 second
+ *  
+ *  by Jonathan Bobrow
+ *  01.10.2017
  */
-                           
-void setup() {  
-   setButtonCallback(button); 
-   setStepCallback(step);
+ 
+void setup() {
    setColorRGB(0, 100, 200);
    blink(1000);
 }
 
 void loop() {
 }
-
-void button() {
-}
-
-void step() {
-    // discrete time logic here
-}
-
-
