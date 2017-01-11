@@ -11,13 +11,13 @@
 
 The following examples are written using the AutomaTiles API for the Arduino IDE.
 
-**Blink**
+**blink**
 An example to show how to blink with a duration `blink(duration)`
 
 **pulse**
 An example to show how to pulse with a duration `pulse(duration)`
 
-**FadeTo**
+**fadeTo**
 An example to show how colors can transition smoothly between two colors `fadeTo(r, g, b, duration)`
 
 **getNeighbor**
