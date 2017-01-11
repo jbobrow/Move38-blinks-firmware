@@ -45,10 +45,9 @@ volatile uint32_t modeStart = 0;
 
 const uint8_t dark[3] = {0x00, 0x00, 0x00};
 const uint8_t wakeColor[3] = {0xAA, 0x55, 0x00};
-rgb outColor = {0x00, 0x00, 0xFF};
+volatile rgb outColor = {0x00, 0x00, 0xFF};
 
-enum MODE
-{
+enum MODE {
 	sleep,
 	running,
 	recieving,
@@ -56,10 +55,10 @@ enum MODE
 };
 enum MODE mode = running;
 
-enum LEDMODE{
+enum LEDMODE {
 	stillMode,
 	fadeMode,
-	blinkMode,  // avoiding 'blink' redeclaration
+	blinkMode,
 	pulseMode
 };
 enum LEDMODE ledMode = stillMode;
@@ -261,7 +260,7 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	// Looking for the fastest route to reach the next Color
 	// if the increment is smaller than 180, that meeans that the shortest route is within a full circle (0 to 360 hue degrees)
 	// although if the increment is bigger than 180, that means that the shorter route will be over 360 or under 0 degrees
-	if (fading.dh < wheel(180)) {
+	if (fading.dh < WHEEL_180) {
 		if (fading.fromHSV.h < fading.toHSV.h) {
 			fading.positiveIncrement = true;
 		} else {
@@ -274,13 +273,13 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 			fading.positiveIncrement = true;
 		}
 		// adjust increment for transitions that overflow the wheel
-		fading.dh = wheel(360) - fading.dh;
+		fading.dh = WHEEL_360 - fading.dh;
 	}
 	fading.inc = fading.dh / fading.fadeCntr;
 
-	printf("Hue Diff = %d\n", wheelTo360(fading.dh));
-	printf("Hue Increment = %d\n", wheelTo360(fading.inc));
-	printf("Positive increment? %d\n", fading.positiveIncrement);
+	//printf("Hue Diff = %d\n", wheelTo360(fading.dh));
+	//printf("Hue Increment = %d\n", wheelTo360(fading.inc));
+	//printf("Positive increment? %d\n", fading.positiveIncrement);
 }
 
 /*void fadeToColor(const Color c, uint8_t ms){}
@@ -288,6 +287,7 @@ void fadeToColorAndReturn(const Color c, uint8_t ms){}*/
 
 void fadeUpdate(void) {
 	// Output current color
+	outColor = hsv2rgb(fading.currHSV);
 	sendColor(LEDCLK, LEDDAT, outColor);
 	// Terminal bar
 	/*for (int i = 0; i < fading.currHSV.h; ++i) {
@@ -299,8 +299,8 @@ void fadeUpdate(void) {
 	if (fading.fadeCntr--) {
 		if (fading.positiveIncrement) {  // Positive increment moving clockwise along the Hue wheel
 			// Detect and correct an color overflow hue value situation
-			if ((fading.currHSV.h + fading.inc) >= wheel(360)) {
-				fading.currHSV.h = fading.currHSV.h + fading.inc - wheel(360);
+			if ((fading.currHSV.h + fading.inc) >= WHEEL_360) {
+				fading.currHSV.h = fading.currHSV.h + fading.inc - WHEEL_360;
 			} else {
 				fading.currHSV.h += fading.inc;  // Increment current Hue value
 				// Discretization double to int correction
@@ -321,7 +321,7 @@ void fadeUpdate(void) {
 		} else { // Negative increment moving counterclockwise along the Hue wheel
 			// Detect and correct negative overflows for hue values
 			if ((fading.currHSV.h - fading.inc) <= 0) {
-				fading.currHSV.h = fading.currHSV.h - fading.inc + wheel(360);
+				fading.currHSV.h = fading.currHSV.h - fading.inc + WHEEL_360;
 			} else {
 				fading.currHSV.h -= fading.inc;
 				// This solves casting and rounding issues using uint8_t.Based on Bressenham's algorithm
@@ -332,7 +332,7 @@ void fadeUpdate(void) {
 				 		fading.currHSV.h--;
 				 		fading.error-= 2* fading.dt;
 				 	}
-				} else if(fading.currHSV.h > ( (fading.toHSV.h + fading.fadeCntr * fading.inc) % wheel(360) ) ){
+				} else if(fading.currHSV.h > ( (fading.toHSV.h + fading.fadeCntr * fading.inc) % WHEEL_360 ) ){
 					fading.currHSV.h--;
 				}
 			}
@@ -408,17 +408,8 @@ void pulse(const uint16_t ms){
 }
 
 void pulsingUpdate(void) {
-	rgb out = hsv2rgb(pulsing.currHSV);
-	//printf("Pulse r = %d, g=%d, b= %d\n", out.r, out.g, out.b);
+	outColor = hsv2rgb(pulsing.currHSV);
 	sendColor(LEDCLK, LEDDAT, outColor);
-	//sendColorAndBrightness(LEDCLK, LEDDAT, outColor, pulsing.brightness); // Send Color and Brightness
-	// Update pulse logic control values (brightness and rampUp)
-	/*for (int i = 0; i < pulsing.currHSV.v*80/255; ++i) {
-		printf("#");
-	}
-	printf("\n");*/
-	//printf("Pulse h = %d, s=%d, v= %d\n", pulsing.currHSV.h, pulsing.currHSV.s, pulsing.currHSV.v);
-	//sendColor(out);
 
 	if (pulsing.rampUp) { // pulsing is ramping up
 		if ((pulsing.currHSV.v + pulsing.increment) >= pulsing.max) {  // If HSV value next cycle will be bigger than the max value time to ramp down
@@ -444,7 +435,7 @@ void pulsingUpdate(void) {
 void updateLed(void) {
 	switch(ledMode){
 		case stillMode:
-			sendColor(LEDCLK, LEDDAT,outColor);
+			sendColor(LEDCLK, LEDDAT, outColor);
 			break;
 		case fadeMode:
 			fadeUpdate();

@@ -14,9 +14,9 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define abs(x) ((x)>0?(x):-(x))
 
-// We use this to macros to tranform from our smaller 127 hue wheel to a more common 360 hue wheel
-#define wheel(d) (d*127/360) // transform a from 360 degrees wheel hue value to a 127 degrees hue wheel 
-#define wheelTo360(d) (d*360/127) // transform a from 360 degrees wheel hue value to a 127 degrees hue wheel 
+// Direct values for full and half rotation for a wheel with a range of 127 values
+#define WHEEL_360	127
+#define WHEEL_180	63
 
 
 typedef struct {
