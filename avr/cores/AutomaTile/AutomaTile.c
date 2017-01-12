@@ -340,6 +340,7 @@ void fadeUpdate(void) {
 		//printf("Hue = %d, Saturation = %d, Value = %d \n", wheelTo360(fading.currHSV.h), fading.currHSV.s, fading.currHSV.v);
 	} else {  // End of the fade to transition, return to send colors
 		ledMode = stillMode;
+		outColor = hsv2rgb(fading.toHSV);
 		//printf("Fade ending :)\n");
 	}
 }
