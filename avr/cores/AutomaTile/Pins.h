@@ -18,6 +18,8 @@
 //IR LED output pin
 #define IR (1<<PB2)
 //LED clock and data pins
+
+#define LEDPORT PORTB
 #define LEDCLK (1<<PB0)
 #define LEDDAT (1<<PB1)
 //Microphone pin
