@@ -9,6 +9,8 @@
 #include <avr/interrupt.h>
 #include "APA102C.h"
 
+#include "Pins.h"
+
 #define set(port,pin) (port |= pin) // set port pin
 #define clear(port,pin) (port &= (~pin)) // clear port pin
 #define bit_val(byte,bit) (byte & (1 << bit)) // test for bit set
@@ -20,16 +22,29 @@ void setPort(volatile uint8_t* port){
 }
 
 //bit bangs an SPI signal to the specified pins of the given data
-inline void sendBit(uint8_t clkPin, uint8_t datPin, uint8_t data){
-	if(data){
-		set(*SPI_PORT, datPin);
-	}else{
-		clear(*SPI_PORT, datPin);
-	}
-	set(*SPI_PORT, clkPin);
-	clear(*SPI_PORT, clkPin);
-}
-
+static void sendBit(uint8_t clkPin, uint8_t datPin, uint8_t data){
+    
+    uint8_t bitmask = 0b10000000;
+    
+    while (bitmask) {
+        
+        // Set the data pin
+        
+        if (data&bitmask) {
+            LEDPORT |= LEDDAT;
+            } else {
+            LEDPORT &= ~LEDDAT;
+        }
+        
+        // strobe the clock pin
+        
+        LEDPORT |= LEDCLK;
+        LEDPORT &= ~LEDCLK;
+        
+        bitmask >>= 1;               // Walk to next bit
+    }
+ }    
+ 
 //bit bangs an SPI signal to the specified pins of the given data
 void sendByte(uint8_t clkPin, uint8_t datPin, uint8_t data){
 	sendBit(clkPin, datPin, bit_val(data,7));
