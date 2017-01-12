@@ -15,6 +15,7 @@ void setPort(volatile uint8_t* port){
 }
 
 //bit bangs an SPI signal to the specified pins of the given data
+static void sendByte( uint8_t data){
     
     uint8_t bitmask = 0b10000000;
     
