@@ -22,7 +22,7 @@ void setPort(volatile uint8_t* port){
 }
 
 //bit bangs an SPI signal to the specified pins of the given data
-static void sendBit(uint8_t clkPin, uint8_t datPin, uint8_t data){
+static void sendBit( uint8_t data){
     
     uint8_t bitmask = 0b10000000;
     
@@ -46,15 +46,15 @@ static void sendBit(uint8_t clkPin, uint8_t datPin, uint8_t data){
  }    
  
 //bit bangs an SPI signal to the specified pins of the given data
-void sendByte(uint8_t clkPin, uint8_t datPin, uint8_t data){
-	sendBit(clkPin, datPin, bit_val(data,7));
-	sendBit(clkPin, datPin, bit_val(data,6));
-	sendBit(clkPin, datPin, bit_val(data,5));
-	sendBit(clkPin, datPin, bit_val(data,4));
-	sendBit(clkPin, datPin, bit_val(data,3));
-	sendBit(clkPin, datPin, bit_val(data,2));
-	sendBit(clkPin, datPin, bit_val(data,1));
-	sendBit(clkPin, datPin, bit_val(data,0));
+void sendByte(uint8_t data){
+	sendBit( bit_val(data,7));
+	sendBit( bit_val(data,6));
+	sendBit( bit_val(data,5));
+	sendBit( bit_val(data,4));
+	sendBit( bit_val(data,3));
+	sendBit( bit_val(data,2));
+	sendBit( bit_val(data,1));
+	sendBit( bit_val(data,0));
 }
 //bit bangs an SPI signal to the specified pins that generates the specified color 
 //	formatted for the APA102, provided as a byte array of R,G,B
@@ -63,13 +63,13 @@ void sendColor(uint8_t clkPin, uint8_t datPin,const rgb c){
 		return;
 	}
 	//Start Frame
-	sendByte(clkPin, datPin, 0x00);
-	sendByte(clkPin, datPin, 0x00);
-	sendByte(clkPin, datPin, 0x00);
-	sendByte(clkPin, datPin, 0x00);
+	sendByte( 0x00);
+	sendByte( 0x00);
+	sendByte( 0x00);
+	sendByte( 0x00);
 	//Data
-	sendByte(clkPin, datPin, 0xE1);//Set brightness to current to minimum TODO: Add setBrightness function (0xE1...0xFF)
-	sendByte(clkPin, datPin, c.b);
-	sendByte(clkPin, datPin, c.g);
-	sendByte(clkPin, datPin, c.r);
+	sendByte( 0xE1);//Set brightness to current to minimum TODO: Add setBrightness function (0xE1...0xFF)
+	sendByte( c.b);
+	sendByte( c.g);
+	sendByte( c.r);
 }
