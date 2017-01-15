@@ -43,8 +43,8 @@ uint8_t datLen = 0;
 volatile uint16_t bitsRcvd = 0;//tracking number of bits received for retransmission/avoiding overflow
 volatile uint32_t modeStart = 0;
 
-const uint8_t dark[3] = {0x00, 0x00, 0x00};
-const uint8_t wakeColor[3] = {0xAA, 0x55, 0x00};
+const rgb dark = {0x00, 0x00, 0x00};
+const rgb wakeColor = {0xAA, 0x55, 0x00};
 volatile rgb outColor = {0x00, 0x00, 0xFF};
 
 enum MODE {
@@ -685,7 +685,7 @@ ISR(PCINT0_vect){
 				}
 			}
 		}
-	}else if(mode == recieving){/*
+	}else if(mode == recieving){
 		modeStart = timer;
 		if(((prevVals^vals)&(1<<progDir))){//programming pin has changed
 			if(timer-oldTime > (3*PULSE_WIDTH)/2){//an edge we care about
@@ -703,12 +703,12 @@ ISR(PCINT0_vect){
 					bitsRcvd++;
 				}
 			}
-		}*/
+		}
 	}
 
 	prevVals = vals;
 }
-/*//ADC conversion complete interrupt
+//ADC conversion complete interrupt
 //Calculates a running median for zeroing out signal
 //Then calculates a running median of deltas from the median to check for exceptional events
 //If a delta is very high compared to the median, a click is detected and click is set to non-0
@@ -753,4 +753,4 @@ ISR(ADC_vect){
 		}
 	}
 }
-*/
+
