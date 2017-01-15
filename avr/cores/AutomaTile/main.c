@@ -44,7 +44,7 @@ int main(void) {
 			}
 
 			loop();
-		}else if(mode==recieving){ /*
+		}else if(mode==recieving){
 			//disable A/D
 			disAD();
 			//set photo transistor interrupt to only trigger on specific direction
@@ -57,9 +57,9 @@ int main(void) {
 				uint32_t diff = getTimer()-modeStart;
 				if(diff>20*PULSE_WIDTH){//Been too long without any new data*/
 					mode = transmitting;
-				//}
-			//}
-		}else if(mode==transmitting){/*
+				}
+			}
+		}else if(mode==transmitting){
 			//disable Phototransistor Interrupt
 			setDirNone();
 			//set LED to output
@@ -88,7 +88,7 @@ int main(void) {
 			}
 
 			startTime = getTimer();
-			sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting
+			//sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting
 			while(getTimer()<startTime+5*PULSE_WIDTH);//pause for mode change
 			startTime = getTimer();
 			uint16_t timeDiff;
@@ -120,7 +120,7 @@ int main(void) {
 			enAD();
 			//re-enable all phototransistors
 			setDirAll();
-			setState(0);*/
+			setState(0);
 
 			mode = running;
 		}
