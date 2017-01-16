@@ -252,7 +252,7 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 
 	fading.dt = ms/LED_REFRESHING_PERIOD;
 	fading.fadeCntr = fading.dt;
-	printf("Led Updates Per Period = %d\n", fading.fadeCntr);
+	//printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 	fading.error = 0;
 
 	fading.dh = abs(fading.fromHSV.h - fading.toHSV.h);
