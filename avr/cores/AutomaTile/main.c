@@ -3,6 +3,8 @@
 #include "color.h"
 #include "APA102C.h"
 
+#include <util/delay.h>
+
 uint32_t prevTimer;
 const rgb black = {0x00, 0x00, 0x00};
 const rgb transmitColor = {0xff, 0x55, 0x00};
@@ -12,6 +14,20 @@ static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmiss
 
 int main(void) {
 	tileSetup();
+
+	// Power on sequence - 3 short blue blinks
+	// so we can visually see when a reset happens
+
+	static rgb powerupColor = {0,0,255};
+
+	uint8_t i=3;
+	while (i--) {
+		sendColor(LEDCLK, LEDDAT, powerupColor );
+		_delay_ms(200);
+		sendColor(LEDCLK, LEDDAT, black );
+		_delay_ms(200);
+		
+	}
 
 	setup();
 
