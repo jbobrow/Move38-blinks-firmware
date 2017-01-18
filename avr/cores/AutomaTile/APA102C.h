@@ -13,8 +13,8 @@
 
 #include "color.h"
 
-void setPort(volatile uint8_t* port);
 void sendColor(uint8_t clkPin, uint8_t datPin,const rgb c);
-volatile uint8_t* SPI_PORT;
+
+void setPort(volatile uint8_t* port);           // TODO: THis is unused, but there are calls to it with no prototype that need to be dealt with
 
 #endif /* APA102C_H_ */
