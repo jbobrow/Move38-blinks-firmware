@@ -3,6 +3,8 @@
 #include "color.h"
 #include "APA102C.h"
 
+#include <util/delay.h>
+
 uint32_t prevTimer;
 const rgb black = {0x00, 0x00, 0x00};
 const rgb transmitColor = {0xff, 0x55, 0x00};
@@ -12,6 +14,20 @@ static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmiss
 
 int main(void) {
 	tileSetup();
+
+	// Power on sequence - 3 short blue blinks
+	// so we can visually see when a reset happens
+
+	static rgb powerupColor = {0,0,255};
+
+	uint8_t i=3;
+	while (i--) {
+		sendColor(LEDCLK, LEDDAT, powerupColor );
+		_delay_ms(200);
+		sendColor(LEDCLK, LEDDAT, black );
+		_delay_ms(200);
+		
+	}
 
 	setup();
 
@@ -44,7 +60,7 @@ int main(void) {
 			}
 
 			loop();
-		}else if(mode==recieving){ /*
+		}else if(mode==recieving){
 			//disable A/D
 			disAD();
 			//set photo transistor interrupt to only trigger on specific direction
@@ -57,9 +73,9 @@ int main(void) {
 				uint32_t diff = getTimer()-modeStart;
 				if(diff>20*PULSE_WIDTH){//Been too long without any new data*/
 					mode = transmitting;
-				//}
-			//}
-		}else if(mode==transmitting){/*
+				}
+			}
+		}else if(mode==transmitting){
 			//disable Phototransistor Interrupt
 			setDirNone();
 			//set LED to output
@@ -88,7 +104,7 @@ int main(void) {
 			}
 
 			startTime = getTimer();
-			sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting
+			//sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting
 			while(getTimer()<startTime+5*PULSE_WIDTH);//pause for mode change
 			startTime = getTimer();
 			uint16_t timeDiff;
@@ -120,7 +136,7 @@ int main(void) {
 			enAD();
 			//re-enable all phototransistors
 			setDirAll();
-			setState(0);*/
+			setState(0);
 
 			mode = running;
 		}
