@@ -606,8 +606,8 @@ ISR(TIM0_COMPA_vect){
 				wake=3;
 			}
 		}else if (wake == 3){
-			DDRB |= IR;//Set direction out
-			PORTB |= IR;//Set pin on
+			PORTB |= IR;//Set pin on - Always set high before switching to output or will will short out Vcc to ground!
+			DDRB |= IR;//Set direction out		
 			sendColor(LEDCLK, LEDDAT, wakeColor);
 			startTime = timer;
 			wake = 4;
