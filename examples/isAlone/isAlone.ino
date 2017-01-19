@@ -3,27 +3,18 @@
  * if the tile is alone color is blue, if it has some nieghbors is yellow
  */
 
-uint8_t blue[3] = {0,0,255};
-uint8_t yellow[3] = {204,204,0};
-                           
 void setup() {  
-   setButtonCallback(button); 
-   setStepCallback(step);
+  setState(1);
 }
 
 void loop() {
   if(isAlone()){
-    setColor(blue);
+    // blue if alone
+    setColorRGB(0,0,255);    
   }else{
-    setColor(yellow);
+    // yellow w/ neighbors
+    setColorRGB(255,255,0);
   }
 }
 
-void button() {
-}
-
-void step() {
-    // discrete time logic here
-}
-
-
+// eventually move this to neighborsChanged...
