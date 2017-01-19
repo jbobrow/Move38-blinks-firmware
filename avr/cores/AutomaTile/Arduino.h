@@ -163,6 +163,7 @@ void pulse(const uint16_t ms); // phase
 void setState(uint8_t state);
 uint8_t getState(void);
 void setStepCallback(cb_func cb);
+
 // Button management callback functions
 void buttonPressed(void);
 void buttonLongPressed(void);
@@ -173,7 +174,7 @@ void buttonTripleClicked(void);
 
 void setTimerCallback(cb_func cb, uint16_t ms);
 void setTimerCallbackTime(uint16_t ms);
-void setTimeout(uint16_t seconds);
+void setTimeout(uint32_t seconds);
 void setMicOn();
 void setMicOff();
 void setSharedDataBuffer(volatile uint8_t* comb,volatile uint8_t* datb , uint8_t len);

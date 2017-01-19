@@ -15,7 +15,7 @@
 #include "AutomaTile.h"
 #include "color.h"
 
-volatile int16_t holdoff = 2000;//for temporarily preventing click outputs
+volatile int16_t holdoff = 50;//for temporarily preventing click outputs
 volatile static uint8_t click = 0;//becomes non-zero when a click is detected
 volatile static uint8_t sync = 0;//becomes non-zero when synchronization pulses need to be sent out
 volatile static uint8_t state = 0;//current state of tile
@@ -27,7 +27,7 @@ volatile static uint8_t soundEn = 1; //if true, react to sound
 // Pin mapping to arrange pins correctly on board
 const uint8_t pinMap[6] = {0,1,2,5,4,3};
 
-uint32_t timeout = 20;
+uint32_t timeout = 20000; // 20s -> 20000ms
 volatile static uint32_t startTime = 0;
 volatile uint32_t sleepTimer = 0;
 volatile static uint32_t powerDownTimer = 0;
@@ -177,8 +177,8 @@ uint32_t getSleepTimer(){
 	return t;
 }
 
-void setTimeout(uint16_t seconds){
-	timeout = seconds;
+void setTimeout(uint32_t seconds){
+	timeout = seconds*1000;  // Convert seconds into ms
 
 }
 
@@ -351,11 +351,11 @@ void blink(const uint16_t ms){
 	ledMode = blinkMode;
 	blinking.status = false;
 	blinking.period = ms;
-	blinking.next = ms + timer;
+	blinking.next = ms + geTimer();
 }
 
 void blinkUpdate(void) {
-	if ((blinking.next-timer) > blinking.period) {
+	if ((blinking.next-getTimer()) > blinking.period) {
 		if (blinking.status) { // On to Off
 			//printf("OFF\n" );
 			sendColor(LEDCLK, LEDDAT, dark);
@@ -525,7 +525,6 @@ ISR(TIM0_COMPA_vect){
 				sendState = state;
 			}
 		}
-
 		if(IRcount==5){
 			PORTB |= IR;
 			DDRB |= IR;
@@ -554,14 +553,32 @@ ISR(TIM0_COMPA_vect){
 				longPressTimer++;
 			}
 			if(IRcount<5){
-				if(!holdoff){
-					if(PINB&BUTTON) {
+
+				if(PINB & BUTTON){//Button active high
+					if(!holdoff){//initial press
 						buttonPressed();
 						sleepTimer = timer;
-						//powerDownTimer = timer;
+						powerDownTimer = timer;
+						longPressTimer = 0;						
+						pressed = true;
+					}else{//during long press wait
+						if(longPressTimer>=longPressTime){
+							buttonLongPressed();
+						}
 					}
-					//holdoff=50;
-				}			
+					holdoff = 3;//debounce and hold state until released
+				}else{//Button not down
+					if(pressed && !holdoff){
+						buttonReleased();  // Button Released callback
+						sleepTimer = timer;
+						powerDownTimer = timer;
+						pressed = false;
+						//holdoff = 3;//debounce and hold state until released
+					}
+					longPressTimer = 0;
+				}
+
+			
 			}
 		}
 	}else if(mode==sleep){

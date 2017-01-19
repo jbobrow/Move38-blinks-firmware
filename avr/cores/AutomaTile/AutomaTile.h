@@ -58,7 +58,7 @@ void setButtonTripleClickedCallback(cb_func cb);
 
 void setTimerCallback(cb_func cb, uint16_t t);
 void setTimerCallbackTime(uint16_t t);
-void setTimeout(uint16_t seconds);
+void setTimeout(uint32_t seconds);
 void setMicOn();
 void setMicOff();
 
