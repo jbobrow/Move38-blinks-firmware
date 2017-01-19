@@ -46,9 +46,15 @@ void pulse(const uint16_t ms); // phase
 void setState(uint8_t state);
 uint8_t getState(void);
 void setStepCallback(cb_func cb);
-void setLongButtonCallback(cb_func cb, uint16_t);
-void setLongButtonCallbackTimer(uint16_t);
-void setButtonCallback(cb_func cb);
+// Button management callback functions
+void setButtonPressedCallback(cb_func cb);
+void setButtonLongPressedCallback(cb_func cb, uint16_t);
+void setButtonLongPressedCallbackTimer(uint16_t);
+void setButtonReleasedCallback(cb_func cb);
+void setButtonClickedCallback(cb_func cb);
+void setButtonDoubleClickedCallback(cb_func cb);
+void setButtonTripleClickedCallback(cb_func cb);
+
 void setTimerCallback(cb_func cb, uint16_t t);
 void setTimerCallbackTime(uint16_t t);
 void setTimeout(uint16_t seconds);

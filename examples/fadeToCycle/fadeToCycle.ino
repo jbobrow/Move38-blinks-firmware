@@ -21,7 +21,7 @@ int numColors = 7;
 int index = 0;
 
 void setup() {
-   setButtonCallback(buttonPressed);
+   setButtonPressedCallback(buttonPressed);
    setColorRGB(255, 0, 0);
 }
 

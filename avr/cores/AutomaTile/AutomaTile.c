@@ -218,9 +218,15 @@ void emptyCB(void){
 }
 
 cb_func clickCB = emptyCB;
-cb_func buttonCB = emptyCB;
 cb_func timerCB = emptyCB;
-cb_func longButtonCB = emptyCB;
+
+cb_func buttonPressed = emptyCB;
+cb_func buttonLongPressed = emptyCB;
+cb_func buttonReleased = emptyCB;
+cb_func buttonClicked = emptyCB;
+cb_func buttonDoubleClicked = emptyCB;
+cb_func buttonTripleClicked = emptyCB;
+
 volatile uint16_t timerCBcount = 0;
 volatile uint16_t timerCBtime = UINT16_MAX;
 
@@ -454,17 +460,33 @@ void setStepCallback(cb_func cb){
 	clickCB = cb;
 }
 
-void setButtonCallback(cb_func cb){
-	buttonCB = cb;
+void setButtonPressedCallback(cb_func cb){
+	buttonPressed = cb;
 }
 
-void setLongButtonCallback(cb_func cb, uint16_t ms){
-	longButtonCB = cb;
+void setButtonLongPressedCallback(cb_func cb, uint16_t ms){
+	buttonLongPressed = cb;
 	longPressTime = ms;
 }
 
-void setLongButtonCallbackTimer(uint16_t ms){
+void setButtonLongPressedCallbackTimer(uint16_t ms){
 	longPressTime = ms;
+}
+
+void setButtonReleasedCallback(cb_func cb){
+	buttonReleased = cb;
+}
+
+void setButtonClickedCallback(cb_func cb){
+	buttonClicked = cb;
+}
+
+void setButtonDoubleClickedCallback(cb_func cb){
+	buttonDoubleClicked = cb;
+}
+
+void setButtonTripleClickedCallback(cb_func cb){
+	buttonTripleClicked = cb;
 }
 
 void setTimerCallback(cb_func cb, uint16_t t){
@@ -567,19 +589,30 @@ ISR(TIM0_COMPA_vect){
 			DDRB &= ~IR;//Set direction in
 			PORTB &= ~IR;//Set pin tristated
 
+			/*
+			
+cb_func buttonPressed = emptyCB;
+cb_func buttonLongPressed = emptyCB;
+cb_func buttonReleased = emptyCB;
+cb_func buttonClicked = emptyCB;
+cb_func buttonDoubleClicked = emptyCB;
+cb_func buttonTripleClicked = emptyCB;
+
+*/
+			
 			 if(longPressTimer<longPressTime){//during long press wait
 				longPressTimer++;
 			 }
 			if(IRcount<5){
 				if(PINB & BUTTON){//Button active high
 					if(holdoff==0){//initial press
-						buttonCB();
+						buttonPressed();
 						sleepTimer = timer;
 						powerDownTimer = timer;
 						longPressTimer = 0;
 					}else{//during long press wait
 						if(longPressTimer>=longPressTime){
-							longButtonCB();
+							buttonLongPressed();
 						}
 					}
 					holdoff = 200;//debounce and hold state until released
