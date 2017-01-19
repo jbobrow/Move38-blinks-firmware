@@ -36,6 +36,9 @@ volatile uint8_t wake = 0;
 volatile static uint16_t longPressTimer = 0;
 volatile static uint16_t longPressTime = 1000;//1 second default
 
+volatile static uint16_t clickDetectionTimer = 0;
+volatile static uint16_t clickdetectionTime = 200;//1 second default
+
 volatile uint8_t progDir = 0;//direction to pay attention to during programming. Set to whichever side put the module into program mode.
 volatile uint8_t* comBuf;//buffer for holding communicated messages when programming rules (oversized)
 volatile uint8_t* datBuf;//buffer for holding verified messages to be accessed by the user
@@ -183,7 +186,12 @@ void setButtonLongPressed(uint16_t ms){
 	if(interrupts)sei();
 }
 
-
+void setButtonClickThreshold(uint16_t ms){
+	uint8_t interrupts = SREG&1<<7;
+	if(interrupts)cli();
+	clickdetectionTime = ms;
+	if(interrupts)sei();
+}
 void setTimeout(uint32_t seconds){
 	timeout = seconds*1000;  // Convert seconds into ms
 
@@ -509,6 +517,7 @@ ISR(TIM0_COMPA_vect){
 	volatile static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
 	volatile static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
 	volatile static bool pressed = false; // used to differenciate between button pressed and released states
+	volatile static bool multipleClicks = false; // used to trigger multi clicks detection
 	volatile static uint8_t numClicks = 0; // Counter for how many clicks have been pressed
 	timer++;
 
@@ -564,15 +573,39 @@ ISR(TIM0_COMPA_vect){
 				longPressTimer++;
 			}
 			
+			// Multiclick detection
+			if(multipleClicks){
+				clickDetectionTimer++;
+				if(clickDetectionTimer >= clickdetectionTime) {
+					switch(numClicks){
+						case 1:
+							buttonClicked();
+							break;
+						case 2:
+							buttonDoubleClicked();
+							break;
+						case 3:
+							buttonTripleClicked();
+							break;
+						default:
+							break;
+					}
+					// Reset multiple clicks detections after "detecting"
+					multipleClicks = false;
+					clickDetectionTimer = 0;
+					numClicks = 0;
+				}
+			}
+			
 			if(IRcount<5){
 
 			if(!holdoff){ // This is a good detection we are not debouncing!
 				if(PINB & BUTTON){// Button pressed (Button active high)
 					if(!pressed){  // Making sure buttonPressed is not called over and over while the button is pressed
 						buttonPressed();
-						numClicks++;
 					}
 					pressed = true;
+					multipleClicks = true;  // Activate multiple cicks detections
 					sleepTimer = timer;
 					powerDownTimer = timer;	
 
@@ -582,16 +615,24 @@ ISR(TIM0_COMPA_vect){
 						buttonLongPressed();
 						longPressTimer = 0;
 					}
+				// Getting read of the holdoff fixed multiple clicks issues
+				// Legacy library had 200ms debounce, which is a really high value, my guess
+				// to help mask the main sleep detection issue. 
+				// Its hard to tell for me (Luis) what is the real debounce time when holdoff = 0,
+				// at least 2ms but also its dependant on IRcount
+				holdoff = 0;
+				
 				} else {  // Button not pressed
 					if(pressed){
 						buttonReleased();  // Button Released callback
+						numClicks++;
+						clickDetectionTimer = 0;
 						sleepTimer = timer;
 						powerDownTimer = timer;
 						pressed = false;
 						longPressTimer = 0;  // Reset lpt counter after button has been released					
 					}
 				}
-				holdoff = 30;
 			} else {
 				
 			}

@@ -39,3 +39,12 @@ void buttonLongPressed(){
   setColorRGB(255, 0, 0);
 }
 
+void buttonClicked(){
+  
+}
+void buttonDoubleClicked(){
+  
+}
+void buttonTripleClicked(){
+    
+}
