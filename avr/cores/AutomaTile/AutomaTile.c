@@ -176,6 +176,13 @@ int32_t getSleepTimer(){
 	if(interrupts)sei();
 	return t;
 }
+void setButtonLongPressed(uint16_t ms){
+	uint8_t interrupts = SREG&1<<7;
+	if(interrupts)cli();
+	longPressTime = ms;
+	if(interrupts)sei();
+}
+
 
 void setTimeout(uint32_t seconds){
 	timeout = seconds*1000;  // Convert seconds into ms
@@ -499,9 +506,10 @@ uint8_t getSharedData(uint8_t i){
 //Timer interrupt occurs every 1 ms
 //Increments timer and controls IR LEDs to keep their timing consistent
 ISR(TIM0_COMPA_vect){
-	static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
-	static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
-	static bool pressed = false; // used to differenciate between button pressed and released states
+	volatile static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
+	volatile static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
+	volatile static bool pressed = false; // used to differenciate between button pressed and released states
+	volatile static uint8_t numClicks = 0; // Counter for how many clicks have been pressed
 	timer++;
 
 	timerCBcount++;
@@ -549,12 +557,46 @@ ISR(TIM0_COMPA_vect){
 			DDRB &= ~IR;//Set direction in
 			PORTB &= ~IR;//Set pin tristated
 			
-			if(longPressTimer<longPressTime){//during long press wait
+			// if the button has been pressed increment longpresstimer
+			// outside of the holdoff statement to make sure that we increase
+			// during debouncing cycles too
+			if(pressed){
 				longPressTimer++;
 			}
+			
 			if(IRcount<5){
 
-				if(PINB & BUTTON){//Button active high
+			if(!holdoff){ // This is a good detection we are not debouncing!
+				if(PINB & BUTTON){// Button pressed (Button active high)
+					if(!pressed){  // Making sure buttonPressed is not called over and over while the button is pressed
+						buttonPressed();
+						numClicks++;
+					}
+					pressed = true;
+					sleepTimer = timer;
+					powerDownTimer = timer;	
+
+					if(longPressTimer>=longPressTime){
+						// This will keep triggering the button long pressed function every time
+						// the button keeps being pressed over long press time
+						buttonLongPressed();
+						longPressTimer = 0;
+					}
+				} else {  // Button not pressed
+					if(pressed){
+						buttonReleased();  // Button Released callback
+						sleepTimer = timer;
+						powerDownTimer = timer;
+						pressed = false;
+						longPressTimer = 0;  // Reset lpt counter after button has been released					
+					}
+				}
+				holdoff = 30;
+			} else {
+				
+			}
+			
+				/*if(PINB & BUTTON){//Button active high
 					if(!holdoff){//initial press
 						buttonPressed();
 						sleepTimer = timer;
@@ -576,7 +618,7 @@ ISR(TIM0_COMPA_vect){
 						holdoff = 30;//debounce and hold state until released
 					}
 					longPressTimer = 0;
-				}
+				}*/
 
 			
 			}
