@@ -220,13 +220,6 @@ void emptyCB(void){
 cb_func clickCB = emptyCB;
 cb_func timerCB = emptyCB;
 
-cb_func buttonPressed = emptyCB;
-cb_func buttonLongPressed = emptyCB;
-cb_func buttonReleased = emptyCB;
-cb_func buttonClicked = emptyCB;
-cb_func buttonDoubleClicked = emptyCB;
-cb_func buttonTripleClicked = emptyCB;
-
 volatile uint16_t timerCBcount = 0;
 volatile uint16_t timerCBtime = UINT16_MAX;
 
@@ -253,12 +246,8 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	fading.currHSV = fading.fromHSV;
 	fading.toHSV = rgb2hsv(toRGB);
 
-	//printf("Fade from h = %d, s=%d, v= %d\n", wheelTo360(fading.currHSV.h), fading.currHSV.s, fading.currHSV.v);
-	//printf("Fade to h = %d, s=%d, v= %d\n", wheelTo360(fading.toHSV.h), fading.toHSV.s, fading.toHSV.v);
-
 	fading.dt = ms/LED_REFRESHING_PERIOD;
 	fading.fadeCntr = fading.dt;
-	//printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 	fading.error = 0;
 
 	fading.dh = abs(fading.fromHSV.h - fading.toHSV.h);
@@ -283,9 +272,6 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	}
 	fading.inc = fading.dh / fading.fadeCntr;
 
-	//printf("Hue Diff = %d\n", wheelTo360(fading.dh));
-	//printf("Hue Increment = %d\n", wheelTo360(fading.inc));
-	//printf("Positive increment? %d\n", fading.positiveIncrement);
 }
 
 /*void fadeToColor(const Color c, uint8_t ms){}
@@ -456,39 +442,6 @@ void updateLed(void) {
 	}
 }
 
-void setStepCallback(cb_func cb){
-	clickCB = cb;
-}
-
-void setButtonPressedCallback(cb_func cb){
-	buttonPressed = cb;
-}
-
-void setButtonLongPressedCallback(cb_func cb, uint16_t ms){
-	buttonLongPressed = cb;
-	longPressTime = ms;
-}
-
-void setButtonLongPressedCallbackTimer(uint16_t ms){
-	longPressTime = ms;
-}
-
-void setButtonReleasedCallback(cb_func cb){
-	buttonReleased = cb;
-}
-
-void setButtonClickedCallback(cb_func cb){
-	buttonClicked = cb;
-}
-
-void setButtonDoubleClickedCallback(cb_func cb){
-	buttonDoubleClicked = cb;
-}
-
-void setButtonTripleClickedCallback(cb_func cb){
-	buttonTripleClicked = cb;
-}
-
 void setTimerCallback(cb_func cb, uint16_t t){
 	timerCB = cb;
 	timerCBcount = 0;
@@ -588,17 +541,6 @@ ISR(TIM0_COMPA_vect){
 		}else{
 			DDRB &= ~IR;//Set direction in
 			PORTB &= ~IR;//Set pin tristated
-
-			/*
-			
-cb_func buttonPressed = emptyCB;
-cb_func buttonLongPressed = emptyCB;
-cb_func buttonReleased = emptyCB;
-cb_func buttonClicked = emptyCB;
-cb_func buttonDoubleClicked = emptyCB;
-cb_func buttonTripleClicked = emptyCB;
-
-*/
 			
 			 if(longPressTimer<longPressTime){//during long press wait
 				longPressTimer++;
