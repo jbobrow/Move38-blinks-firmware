@@ -4,8 +4,6 @@
  */
                            
 void setup() {  
-   setButtonCallback(button); 
-   setStepCallback(step);
 }
 
 void loop() {
@@ -13,18 +11,10 @@ void loop() {
     for(uint8_t j =0; j<255; j++){
       for(uint8_t k =0; k<255; k++){
         setColorRGB(i, j, k);
-        // Not sure why delay has been commented from Arduino.h
-        //delay(10);
+        // NOTE: DELAY IS NOT CURRENTLY FUNCTIONING... 
+        // artifact of legacy API, should be functioning in current API
+        delay(10);
       }
     }
   }
 }
-
-void button() {
-}
-
-void step() {
-    // discrete time logic here
-}
-
-
