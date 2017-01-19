@@ -15,7 +15,9 @@ void setup() {
   setButtonCallback(button);
   setStepCallback(onStep);
   setState(1);
-  setColor(colors[curColor]);
+  setColorRGB(colors[curColor][0],
+              colors[curColor][1], 
+              colors[curColor][2]);
   setTimeout(60);
 }
 
@@ -26,7 +28,9 @@ void loop() {
 
 void onStep() {
   curColor = (curColor+1) % numColors;
-  setColor(colors[curColor]);
+  setColorRGB(colors[curColor][0],
+              colors[curColor][1], 
+              colors[curColor][2]);
 }
 
 void button() {
