@@ -24,8 +24,8 @@ uint8_t getNeighbor(const uint8_t neighbor);
 bool isAlone(void);
 
 void sendStep(void);
-uint32_t getTimer(void);
-uint32_t getSleepTimer(void);
+int32_t getTimer(void);
+int32_t getSleepTimer(void);
 
 void setColor(const uint8_t color[3]);
 void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b);

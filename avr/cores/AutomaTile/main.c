@@ -61,16 +61,17 @@ int main(void) {
 			prevTimer = getTimer();
 
 			if(timeout>0){
-				uint32_t gt = getTimer();
-				uint32_t gst = getSleepTimer();
-				uint32_t timeoutDiff = 0;
+				int32_t gt = getTimer();
+				int32_t gst = getSleepTimer();
+				int32_t timeoutDiff = 0;
 				// WATCHOUT!! HACK. Its is not clear to me how is it possible that at any point
 				// timer value is smaller, than sleep timer, my guess is that at some "point"
 				// someone is reading one of both variables while an interrupt is fired without precaution
 				// which messes one of the values. This fixes the issue here, and for the moment
 				if (gt > gst) {
-					uint32_t timeoutDiff = gt - gst;
+					timeoutDiff = gt - gst;
 				}
+				
 				if(timeoutDiff>timeout){
 					if(gt > gst)
 						debugBlinkColor(green);

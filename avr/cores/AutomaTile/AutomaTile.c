@@ -27,9 +27,9 @@ volatile static uint8_t soundEn = 1; //if true, react to sound
 // Pin mapping to arrange pins correctly on board
 const uint8_t pinMap[6] = {0,1,2,5,4,3};
 
-uint32_t timeout = 20000; // 20s -> 20000ms
-volatile static uint32_t startTime = 0;
-volatile uint32_t sleepTimer = 0;
+int32_t timeout = 10000; // s -> *1000ms
+volatile static int32_t startTime = 0;
+volatile static int32_t sleepTimer = 0;
 volatile static uint32_t powerDownTimer = 0;
 volatile uint8_t wake = 0;
 
@@ -161,18 +161,18 @@ bool isAlone(void){
 	return alone;
 }
 
-uint32_t getTimer(){
+int32_t getTimer(){
 	uint8_t interrupts = SREG&1<<7;
 	if(interrupts)cli();
-	uint32_t t = timer;
+	int32_t t = timer;
 	if(interrupts)sei();
 	return t;
 }
 
-uint32_t getSleepTimer(){
+int32_t getSleepTimer(){
 	uint8_t interrupts = SREG&1<<7;
 	if(interrupts)cli();
-	uint32_t t = sleepTimer;
+	int32_t t = sleepTimer;
 	if(interrupts)sei();
 	return t;
 }
@@ -573,7 +573,7 @@ ISR(TIM0_COMPA_vect){
 						sleepTimer = timer;
 						powerDownTimer = timer;
 						pressed = false;
-						//holdoff = 3;//debounce and hold state until released
+						holdoff = 30;//debounce and hold state until released
 					}
 					longPressTimer = 0;
 				}
