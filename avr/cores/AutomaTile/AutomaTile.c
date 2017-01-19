@@ -163,9 +163,16 @@ bool isAlone(void){
 
 uint32_t getTimer(){
 	uint8_t interrupts = SREG&1<<7;
-
 	if(interrupts)cli();
 	uint32_t t = timer;
+	if(interrupts)sei();
+	return t;
+}
+
+uint32_t getSleepTimer(){
+	uint8_t interrupts = SREG&1<<7;
+	if(interrupts)cli();
+	uint32_t t = sleepTimer;
 	if(interrupts)sei();
 	return t;
 }
@@ -494,6 +501,7 @@ uint8_t getSharedData(uint8_t i){
 ISR(TIM0_COMPA_vect){
 	static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
 	static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
+	static bool pressed = false; // used to differenciate between button pressed and released states
 	timer++;
 
 	timerCBcount++;
@@ -542,25 +550,18 @@ ISR(TIM0_COMPA_vect){
 			DDRB &= ~IR;//Set direction in
 			PORTB &= ~IR;//Set pin tristated
 			
-			 if(longPressTimer<longPressTime){//during long press wait
+			if(longPressTimer<longPressTime){//during long press wait
 				longPressTimer++;
-			 }
+			}
 			if(IRcount<5){
-				if(PINB & BUTTON){//Button active high
-					if(holdoff==0){//initial press
+				if(!holdoff){
+					if(PINB&BUTTON) {
 						buttonPressed();
 						sleepTimer = timer;
-						powerDownTimer = timer;
-						longPressTimer = 0;
-					}else{//during long press wait
-						if(longPressTimer>=longPressTime){
-							buttonLongPressed();
-						}
+						//powerDownTimer = timer;
 					}
-					holdoff = 200;//debounce and hold state until released
-				}else{//Button not down
-					longPressTimer = 0;
-				}
+					//holdoff=50;
+				}			
 			}
 		}
 	}else if(mode==sleep){
