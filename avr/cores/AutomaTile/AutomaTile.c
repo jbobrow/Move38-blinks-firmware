@@ -15,7 +15,7 @@
 #include "AutomaTile.h"
 #include "color.h"
 
-volatile int16_t holdoff = 2000;//for temporarily preventing click outputs
+volatile int16_t holdoff = 50;//for temporarily preventing click outputs
 volatile static uint8_t click = 0;//becomes non-zero when a click is detected
 volatile static uint8_t sync = 0;//becomes non-zero when synchronization pulses need to be sent out
 volatile static uint8_t state = 0;//current state of tile
@@ -27,14 +27,17 @@ volatile static uint8_t soundEn = 1; //if true, react to sound
 // Pin mapping to arrange pins correctly on board
 const uint8_t pinMap[6] = {0,1,2,5,4,3};
 
-uint32_t timeout = 20;
-volatile static uint32_t startTime = 0;
-volatile uint32_t sleepTimer = 0;
+int32_t timeout = 10000; // s -> *1000ms
+volatile static int32_t startTime = 0;
+volatile static int32_t sleepTimer = 0;
 volatile static uint32_t powerDownTimer = 0;
 volatile uint8_t wake = 0;
 
 volatile static uint16_t longPressTimer = 0;
 volatile static uint16_t longPressTime = 1000;//1 second default
+
+volatile static uint16_t clickDetectionTimer = 0;
+volatile static uint16_t clickdetectionTime = 200;//1 second default
 
 volatile uint8_t progDir = 0;//direction to pay attention to during programming. Set to whichever side put the module into program mode.
 volatile uint8_t* comBuf;//buffer for holding communicated messages when programming rules (oversized)
@@ -161,17 +164,36 @@ bool isAlone(void){
 	return alone;
 }
 
-uint32_t getTimer(){
+int32_t getTimer(){
 	uint8_t interrupts = SREG&1<<7;
-
 	if(interrupts)cli();
-	uint32_t t = timer;
+	int32_t t = timer;
 	if(interrupts)sei();
 	return t;
 }
 
-void setTimeout(uint16_t seconds){
-	timeout = seconds;
+int32_t getSleepTimer(){
+	uint8_t interrupts = SREG&1<<7;
+	if(interrupts)cli();
+	int32_t t = sleepTimer;
+	if(interrupts)sei();
+	return t;
+}
+void setButtonLongPressed(uint16_t ms){
+	uint8_t interrupts = SREG&1<<7;
+	if(interrupts)cli();
+	longPressTime = ms;
+	if(interrupts)sei();
+}
+
+void setButtonClickThreshold(uint16_t ms){
+	uint8_t interrupts = SREG&1<<7;
+	if(interrupts)cli();
+	clickdetectionTime = ms;
+	if(interrupts)sei();
+}
+void setTimeout(uint32_t seconds){
+	timeout = seconds*1000;  // Convert seconds into ms
 
 }
 
@@ -218,9 +240,8 @@ void emptyCB(void){
 }
 
 cb_func clickCB = emptyCB;
-cb_func buttonCB = emptyCB;
 cb_func timerCB = emptyCB;
-cb_func longButtonCB = emptyCB;
+
 volatile uint16_t timerCBcount = 0;
 volatile uint16_t timerCBtime = UINT16_MAX;
 
@@ -247,12 +268,8 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	fading.currHSV = fading.fromHSV;
 	fading.toHSV = rgb2hsv(toRGB);
 
-	//printf("Fade from h = %d, s=%d, v= %d\n", wheelTo360(fading.currHSV.h), fading.currHSV.s, fading.currHSV.v);
-	//printf("Fade to h = %d, s=%d, v= %d\n", wheelTo360(fading.toHSV.h), fading.toHSV.s, fading.toHSV.v);
-
 	fading.dt = ms/LED_REFRESHING_PERIOD;
 	fading.fadeCntr = fading.dt;
-	//printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 	fading.error = 0;
 
 	fading.dh = abs(fading.fromHSV.h - fading.toHSV.h);
@@ -277,9 +294,6 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	}
 	fading.inc = fading.dh / fading.fadeCntr;
 
-	//printf("Hue Diff = %d\n", wheelTo360(fading.dh));
-	//printf("Hue Increment = %d\n", wheelTo360(fading.inc));
-	//printf("Positive increment? %d\n", fading.positiveIncrement);
 }
 
 /*void fadeToColor(const Color c, uint8_t ms){}
@@ -352,11 +366,11 @@ void blink(const uint16_t ms){
 	ledMode = blinkMode;
 	blinking.status = false;
 	blinking.period = ms;
-	blinking.next = ms + timer;
+	blinking.next = ms + geTimer();
 }
 
 void blinkUpdate(void) {
-	if ((blinking.next-timer) > blinking.period) {
+	if ((blinking.next-getTimer()) > blinking.period) {
 		if (blinking.status) { // On to Off
 			//printf("OFF\n" );
 			sendColor(LEDCLK, LEDDAT, dark);
@@ -450,23 +464,6 @@ void updateLed(void) {
 	}
 }
 
-void setStepCallback(cb_func cb){
-	clickCB = cb;
-}
-
-void setButtonCallback(cb_func cb){
-	buttonCB = cb;
-}
-
-void setLongButtonCallback(cb_func cb, uint16_t ms){
-	longButtonCB = cb;
-	longPressTime = ms;
-}
-
-void setLongButtonCallbackTimer(uint16_t ms){
-	longPressTime = ms;
-}
-
 void setTimerCallback(cb_func cb, uint16_t t){
 	timerCB = cb;
 	timerCBcount = 0;
@@ -517,8 +514,11 @@ uint8_t getSharedData(uint8_t i){
 //Timer interrupt occurs every 1 ms
 //Increments timer and controls IR LEDs to keep their timing consistent
 ISR(TIM0_COMPA_vect){
-	static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
-	static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
+	volatile static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
+	volatile static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
+	volatile static bool pressed = false; // used to differenciate between button pressed and released states
+	volatile static bool multipleClicks = false; // used to trigger multi clicks detection
+	volatile static uint8_t numClicks = 0; // Counter for how many clicks have been pressed
 	timer++;
 
 	timerCBcount++;
@@ -542,7 +542,6 @@ ISR(TIM0_COMPA_vect){
 				sendState = state;
 			}
 		}
-
 		if(IRcount==5){
 			PORTB |= IR;
 			DDRB |= IR;
@@ -566,26 +565,103 @@ ISR(TIM0_COMPA_vect){
 		}else{
 			DDRB &= ~IR;//Set direction in
 			PORTB &= ~IR;//Set pin tristated
-
-			 if(longPressTimer<longPressTime){//during long press wait
+			
+			// if the button has been pressed increment longpresstimer
+			// outside of the holdoff statement to make sure that we increase
+			// during debouncing cycles too
+			if(pressed){
 				longPressTimer++;
-			 }
+			}
+			
+			// Multiclick detection
+			if(multipleClicks){
+				clickDetectionTimer++;
+				if(clickDetectionTimer >= clickdetectionTime) {
+					switch(numClicks){
+						case 1:
+							buttonClicked();
+							break;
+						case 2:
+							buttonDoubleClicked();
+							break;
+						case 3:
+							buttonTripleClicked();
+							break;
+						default:
+							break;
+					}
+					// Reset multiple clicks detections after "detecting"
+					multipleClicks = false;
+					clickDetectionTimer = 0;
+					numClicks = 0;
+				}
+			}
+			
 			if(IRcount<5){
-				if(PINB & BUTTON){//Button active high
-					if(holdoff==0){//initial press
-						buttonCB();
+
+			if(!holdoff){ // This is a good detection we are not debouncing!
+				if(PINB & BUTTON){// Button pressed (Button active high)
+					if(!pressed){  // Making sure buttonPressed is not called over and over while the button is pressed
+						buttonPressed();
+					}
+					pressed = true;
+					multipleClicks = true;  // Activate multiple cicks detections
+					sleepTimer = timer;
+					powerDownTimer = timer;	
+
+					if(longPressTimer>=longPressTime){
+						// This will keep triggering the button long pressed function every time
+						// the button keeps being pressed over long press time
+						buttonLongPressed();
+						longPressTimer = 0;
+					}
+				// Getting read of the holdoff fixed multiple clicks issues
+				// Legacy library had 200ms debounce, which is a really high value, my guess
+				// to help mask the main sleep detection issue. 
+				// Its hard to tell for me (Luis) what is the real debounce time when holdoff = 0,
+				// at least 2ms but also its dependant on IRcount
+				holdoff = 0;
+				
+				} else {  // Button not pressed
+					if(pressed){
+						buttonReleased();  // Button Released callback
+						numClicks++;
+						clickDetectionTimer = 0;
 						sleepTimer = timer;
 						powerDownTimer = timer;
-						longPressTimer = 0;
+						pressed = false;
+						longPressTimer = 0;  // Reset lpt counter after button has been released					
+					}
+				}
+			} else {
+				
+			}
+			
+				/*if(PINB & BUTTON){//Button active high
+					if(!holdoff){//initial press
+						buttonPressed();
+						sleepTimer = timer;
+						powerDownTimer = timer;
+						longPressTimer = 0;						
+						pressed = true;
 					}else{//during long press wait
 						if(longPressTimer>=longPressTime){
-							longButtonCB();
+							buttonLongPressed();
 						}
 					}
-					holdoff = 200;//debounce and hold state until released
+					holdoff = 3;//debounce and hold state until released
 				}else{//Button not down
+					if(pressed && !holdoff){
+						buttonReleased();  // Button Released callback
+						sleepTimer = timer;
+						powerDownTimer = timer;
+						pressed = false;
+						holdoff = 30;//debounce and hold state until released
+					}
 					longPressTimer = 0;
-				}
+				}*/
+
+			
 			}
 		}
 	}else if(mode==sleep){

@@ -21,7 +21,6 @@ int numColors = 7;
 int index = 0;
 
 void setup() {
-   //setButtonPressedCallback(buttonPressed);
    setColorRGB(255, 0, 0);
 }
 
@@ -29,18 +28,15 @@ void loop() {
 }
 
 void buttonPressed() {
-   index = (index+1) % numColors;
-   
-   fadeTo(colors[index][0], // R value
-          colors[index][1], // G value
-          colors[index][2], // B value
-          1000);            // 1 second
-}
+   setColorRGB(0, 255, 0);
+  }
 
 void buttonReleased() {
+   setColorRGB(0, 0, 255);
 }
 
 void buttonLongPressed(){
+  setColorRGB(255, 0, 0);
 }
 
 void buttonClicked(){
@@ -52,4 +48,3 @@ void buttonDoubleClicked(){
 void buttonTripleClicked(){
     
 }
-

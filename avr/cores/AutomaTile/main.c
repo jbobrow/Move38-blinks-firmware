@@ -9,8 +9,21 @@ uint32_t prevTimer;
 const rgb black = {0x00, 0x00, 0x00};
 const rgb transmitColor = {0xff, 0x55, 0x00};
 const rgb recieveColor = {0x00, 0xff, 0x55};
+const rgb red = {0xff, 0, 0};
+const rgb green = {0, 0xff, 0};
+const rgb blue = {0, 0, 0xff};
 
 static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmission of data
+
+void debugBlinkColor(const rgb c){
+	uint8_t i=4;
+	while (i--) {
+		sendColor(LEDCLK, LEDDAT, c);
+		_delay_ms(100);
+		sendColor(LEDCLK, LEDDAT, black);
+		_delay_ms(100);	
+	}
+}
 
 int main(void) {
 	tileSetup();
@@ -28,7 +41,7 @@ int main(void) {
 		_delay_ms(200);
 		
 	}
-
+	
 	setup();
 
 	prevTimer = getTimer();
@@ -48,7 +61,23 @@ int main(void) {
 			prevTimer = getTimer();
 
 			if(timeout>0){
-				if(prevTimer-sleepTimer>1000*timeout){
+				int32_t gt = getTimer();
+				int32_t gst = getSleepTimer();
+				int32_t timeoutDiff = 0;
+				// WATCHOUT!! HACK. Its is not clear to me how is it possible that at any point
+				// timer value is smaller, than sleep timer, my guess is that at some "point"
+				// someone is reading one of both variables while an interrupt is fired without precaution
+				// which messes one of the values. This fixes the issue here, and for the moment
+				if (gt > gst) {
+					timeoutDiff = gt - gst;
+				}
+				
+				if(timeoutDiff>timeout){
+					if(gt > gst)
+						debugBlinkColor(green);
+					else
+						debugBlinkColor(red);
+					debugBlinkColor(blue);
 					mode = sleep;
 					disAD();
 					DDRB &= ~IR;//Set direction in

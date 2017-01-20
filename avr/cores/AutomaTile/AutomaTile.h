@@ -24,7 +24,10 @@ uint8_t getNeighbor(const uint8_t neighbor);
 bool isAlone(void);
 
 void sendStep(void);
-uint32_t getTimer(void);
+int32_t getTimer(void);
+int32_t getSleepTimer(void);
+void setButtonLongPressed(uint16_t ms);
+void setButtonClickThreshold(uint16_t ms);
 
 void setColor(const uint8_t color[3]);
 void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b);
@@ -46,12 +49,18 @@ void pulse(const uint16_t ms); // phase
 void setState(uint8_t state);
 uint8_t getState(void);
 void setStepCallback(cb_func cb);
-void setLongButtonCallback(cb_func cb, uint16_t);
-void setLongButtonCallbackTimer(uint16_t);
-void setButtonCallback(cb_func cb);
+// Button management callback functions
+void setButtonPressedCallback(cb_func cb);
+void setButtonLongPressedCallback(cb_func cb, uint16_t);
+void setButtonLongPressedCallbackTimer(uint16_t);
+void setButtonReleasedCallback(cb_func cb);
+void setButtonClickedCallback(cb_func cb);
+void setButtonDoubleClickedCallback(cb_func cb);
+void setButtonTripleClickedCallback(cb_func cb);
+
 void setTimerCallback(cb_func cb, uint16_t t);
 void setTimerCallbackTime(uint16_t t);
-void setTimeout(uint16_t seconds);
+void setTimeout(uint32_t seconds);
 void setMicOn();
 void setMicOff();
 
