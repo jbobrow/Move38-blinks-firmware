@@ -14,3 +14,21 @@ void setup() {
 
 void loop() {
 }
+
+void buttonClicked(){
+}
+
+void buttonDoubleClicked(){
+}
+
+void buttonTripleClicked(){
+}
+
+void buttonPressed() {
+}
+
+void buttonReleased() {
+}
+
+void buttonLongPressed(){
+}

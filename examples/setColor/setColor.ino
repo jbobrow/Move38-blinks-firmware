@@ -4,8 +4,6 @@
  */
                            
 void setup() {  
-   setButtonCallback(button); 
-   setStepCallback(step);
 }
 
 void loop() {
@@ -20,11 +18,20 @@ void loop() {
   }
 }
 
-void button() {
+void buttonClicked(){
 }
 
-void step() {
-    // discrete time logic here
+void buttonDoubleClicked(){
 }
 
+void buttonTripleClicked(){
+}
 
+void buttonPressed() {
+}
+
+void buttonReleased() {
+}
+
+void buttonLongPressed(){
+}

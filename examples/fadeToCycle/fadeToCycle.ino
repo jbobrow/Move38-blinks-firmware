@@ -28,6 +28,15 @@ void setup() {
 void loop() {
 }
 
+void buttonClicked(){
+}
+
+void buttonDoubleClicked(){
+}
+
+void buttonTripleClicked(){
+}
+
 void buttonPressed() {
    index = (index+1) % numColors;
    
@@ -42,14 +51,3 @@ void buttonReleased() {
 
 void buttonLongPressed(){
 }
-
-void buttonClicked(){
-  
-}
-void buttonDoubleClicked(){
-  
-}
-void buttonTripleClicked(){
-    
-}
-

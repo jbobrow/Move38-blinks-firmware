@@ -12,7 +12,6 @@ uint8_t numColors = 7;
 
 void setup() {
   // put your setup code here, to run once:
-  setButtonCallback(button);
   setStepCallback(onStep);
   setState(1);
   setColorRGB(colors[curColor][0],
@@ -33,7 +32,21 @@ void onStep() {
               colors[curColor][2]);
 }
 
-void button() {
+void buttonClicked(){
+}
+
+void buttonDoubleClicked(){
+}
+
+void buttonTripleClicked(){
+}
+
+void buttonPressed() {
   sendStep();
 }
 
+void buttonReleased() {
+}
+
+void buttonLongPressed(){
+}

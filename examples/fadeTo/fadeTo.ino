@@ -8,7 +8,6 @@
  */
  
 void setup() {
-   setButtonCallback(buttonPressed);
    setColorRGB(255,255,255);
    fadeTo(0,255,255, 5000);
 }
@@ -16,8 +15,24 @@ void setup() {
 void loop() {
 }
 
+void buttonClicked(){
+}
+
+void buttonDoubleClicked(){
+}
+
+void buttonTripleClicked(){
+}
+
 void buttonPressed() {
    setColorRGB(255, 0, 0);
    fadeTo(0,255,255, 5000);
+
+}
+
+void buttonReleased() {
+}
+
+void buttonLongPressed(){
 }
 
