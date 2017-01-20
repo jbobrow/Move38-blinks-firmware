@@ -37,7 +37,7 @@ volatile static uint16_t longPressTimer = 0;
 volatile static uint16_t longPressTime = 1000;//1 second default
 
 volatile static uint16_t clickDetectionTimer = 0;
-volatile static uint16_t clickdetectionTime = 200;//1 second default
+volatile static uint16_t clickdetectionTime = 330;	//330ms default
 
 volatile uint8_t progDir = 0;//direction to pay attention to during programming. Set to whichever side put the module into program mode.
 volatile uint8_t* comBuf;//buffer for holding communicated messages when programming rules (oversized)
@@ -565,14 +565,14 @@ ISR(TIM0_COMPA_vect){
 		}else{
 			DDRB &= ~IR;//Set direction in
 			PORTB &= ~IR;//Set pin tristated
-			
+
 			// if the button has been pressed increment longpresstimer
 			// outside of the holdoff statement to make sure that we increase
 			// during debouncing cycles too
 			if(pressed){
 				longPressTimer++;
 			}
-			
+
 			// Multiclick detection
 			if(multipleClicks){
 				clickDetectionTimer++;
@@ -596,7 +596,7 @@ ISR(TIM0_COMPA_vect){
 					numClicks = 0;
 				}
 			}
-			
+
 			if(IRcount<5){
 
 			if(!holdoff){ // This is a good detection we are not debouncing!
@@ -607,7 +607,7 @@ ISR(TIM0_COMPA_vect){
 					pressed = true;
 					multipleClicks = true;  // Activate multiple cicks detections
 					sleepTimer = timer;
-					powerDownTimer = timer;	
+					powerDownTimer = timer;
 
 					if(longPressTimer>=longPressTime){
 						// This will keep triggering the button long pressed function every time
@@ -617,11 +617,11 @@ ISR(TIM0_COMPA_vect){
 					}
 				// Getting read of the holdoff fixed multiple clicks issues
 				// Legacy library had 200ms debounce, which is a really high value, my guess
-				// to help mask the main sleep detection issue. 
+				// to help mask the main sleep detection issue.
 				// Its hard to tell for me (Luis) what is the real debounce time when holdoff = 0,
 				// at least 2ms but also its dependant on IRcount
 				holdoff = 0;
-				
+
 				} else {  // Button not pressed
 					if(pressed){
 						buttonReleased();  // Button Released callback
@@ -630,19 +630,19 @@ ISR(TIM0_COMPA_vect){
 						sleepTimer = timer;
 						powerDownTimer = timer;
 						pressed = false;
-						longPressTimer = 0;  // Reset lpt counter after button has been released					
+						longPressTimer = 0;  // Reset lpt counter after button has been released
 					}
 				}
 			} else {
-				
+
 			}
-			
+
 				/*if(PINB & BUTTON){//Button active high
 					if(!holdoff){//initial press
 						buttonPressed();
 						sleepTimer = timer;
 						powerDownTimer = timer;
-						longPressTimer = 0;						
+						longPressTimer = 0;
 						pressed = true;
 					}else{//during long press wait
 						if(longPressTimer>=longPressTime){
@@ -661,7 +661,7 @@ ISR(TIM0_COMPA_vect){
 					longPressTimer = 0;
 				}*/
 
-			
+
 			}
 		}
 	}else if(mode==sleep){
@@ -684,7 +684,7 @@ ISR(TIM0_COMPA_vect){
 			}
 		}else if (wake == 3){
 			PORTB |= IR;//Set pin on - Always set high before switching to output or will will short out Vcc to ground!
-			DDRB |= IR;//Set direction out		
+			DDRB |= IR;//Set direction out
 			sendColor(LEDCLK, LEDDAT, wakeColor);
 			startTime = timer;
 			wake = 4;
@@ -829,4 +829,3 @@ ISR(ADC_vect){
 		}
 	}
 }
-
