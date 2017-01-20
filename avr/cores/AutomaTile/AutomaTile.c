@@ -53,7 +53,7 @@ volatile rgb outColor = {0x00, 0x00, 0xFF};
 enum MODE {
 	sleep,
 	running,
-	//recieving,
+	recieving,
 	transmitting
 };
 enum MODE mode = running;
@@ -270,7 +270,6 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 
 	fading.dt = ms/LED_REFRESHING_PERIOD;
 	fading.fadeCntr = fading.dt;
-	//printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 	fading.error = 0;
 
 	fading.dh = abs(fading.fromHSV.h - fading.toHSV.h);
@@ -719,6 +718,7 @@ ISR(PCINT1_vect){
 //Pin Change 0 interrupt triggered when any of the phototransistors change level
 //Checks what pins are newly on and updates their buffers with the current time
 static volatile uint32_t oldTime = 0;
+volatile uint8_t msgNum = 0;
 
 ISR(PCINT0_vect){
 	static uint8_t prevVals = 0; //stores the previous state so that only what pins are newly on are checked
@@ -745,13 +745,38 @@ ISR(PCINT0_vect){
 					if(pulseCount[i]>=4){//There have been 4 quick pulses. Enter programming mode.
 						click = 0;
 						sync = 0;
-						//	mode = recieving;  Do not enter reciving mode!
+						mode = recieving;
+						progDir = i;
+						int j;
+						for(j = 0; j < datLen; j++){//zero out buffer
+							comBuf[j]=0;
+						}
+						msgNum = 0;
 					}
 				}else{//Normally timed pulse, process normally
 					pulseCount[i]=0;
 					timeBuf[i]++;
 					timeBuf[i] &= 0x03;
 					times[i][timeBuf[i]] = timer;
+				}
+			}
+		}
+	}else if(mode == recieving){
+		modeStart = timer;
+		if(((prevVals^vals)&(1<<progDir))){//programming pin has changed
+			if(timer-oldTime > (3*PULSE_WIDTH)/2){//an edge we care about
+				if(timer-oldTime > 4*PULSE_WIDTH){//first bit. use for sync
+					bitsRcvd = 0;
+				}
+				oldTime = timer;
+				if(bitsRcvd<8){
+					uint8_t bit = ((vals&(1<<progDir))>>progDir);
+					msgNum |= bit<<(bitsRcvd%8);
+					bitsRcvd++;
+				}else	if(bitsRcvd<datLen*8+8){
+					uint8_t bit = ((vals&(1<<progDir))>>progDir);
+					comBuf[bitsRcvd/8-1] |= bit<<(bitsRcvd%8);
+					bitsRcvd++;
 				}
 			}
 		}

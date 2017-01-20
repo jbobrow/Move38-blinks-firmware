@@ -41,7 +41,7 @@ int main(void) {
 		_delay_ms(200);
 		
 	}
-
+	
 	setup();
 
 	prevTimer = getTimer();
@@ -88,7 +88,86 @@ int main(void) {
 				}
 			}
 
-			loop();		
+			loop();
+		}else if(mode==recieving){
+			//disable A/D
+			disAD();
+			//set photo transistor interrupt to only trigger on specific direction
+			setDir(progDir);
+			//set recieving color
+			sendColor(LEDCLK, LEDDAT, recieveColor);
+			//record time entering the mode for timeout
+			modeStart = getTimer();
+			while(mode==recieving){//stay in this mode until instructed to leave or timeout
+				uint32_t diff = getTimer()-modeStart;
+				if(diff>20*PULSE_WIDTH){//Been too long without any new data*/
+					mode = transmitting;
+				}
+			}
+		}else if(mode==transmitting){
+			//disable Phototransistor Interrupt
+			setDirNone();
+			//set LED to output
+			DDRB |= IR;//Set direction out
+			//send 5 pulses
+			uint32_t startTime = getTimer();
+			if(bitsRcvd>=8 && msgNum!=seqNum){
+				seqNum = msgNum;
+				int i;
+				for(i=0; i<5; i++){
+					while(getTimer()==startTime){
+						PORTB &= ~IR;
+					}
+					startTime = getTimer();
+					while(getTimer()==startTime){
+						PORTB |= IR;
+					}
+					startTime = getTimer();
+				}
+
+				for(i=0;i<bitsRcvd/8-1;i++){
+					datBuf[i]=comBuf[i];
+				}
+			}else{
+				bitsRcvd = 0;
+			}
+
+			startTime = getTimer();
+			//sendColor(LEDCLK, LEDDAT, transmitColor);//update color while waiting
+			while(getTimer()<startTime+5*PULSE_WIDTH);//pause for mode change
+			startTime = getTimer();
+			uint16_t timeDiff;
+			uint16_t bitNum;
+			while(bitsRcvd>0){
+				timeDiff = (getTimer()-startTime)/PULSE_WIDTH;
+				bitNum = timeDiff/2;
+				if(timeDiff%2==0){//first half
+					if(comBuf[bitNum/8]&(1<<bitNum%8)){//bit high
+						PORTB &=  ~IR;
+					}else{//bit low
+						PORTB |=  IR;
+					}
+				}else{//second half
+					if(comBuf[bitNum/8]&(1<<bitNum%8)){//bit high
+						PORTB |=  IR;
+					}else{//bit low
+						PORTB &=  ~IR;
+					}
+				}
+				if(bitNum>=bitsRcvd){
+					bitsRcvd = 0;
+				}
+			}
+			while(getTimer()<startTime+2000);//pause for effect
+
+			//done transmitting
+			//re-enable A/D
+			enAD();
+			//re-enable all phototransistors
+			setDirAll();
+			setState(0);
+
+			mode = running;
 		}
 	}
 }
