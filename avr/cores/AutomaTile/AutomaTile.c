@@ -366,7 +366,7 @@ void blink(const uint16_t ms){
 	ledMode = blinkMode;
 	blinking.status = false;
 	blinking.period = ms;
-	blinking.next = ms + geTimer();
+	blinking.next = ms + getTimer();
 }
 
 void blinkUpdate(void) {
