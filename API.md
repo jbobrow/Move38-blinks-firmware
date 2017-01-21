@@ -10,18 +10,35 @@ void loop() {
 	// continuous time logic here
 }
 
+void buttonClicked(){
+}
+
+void buttonDoubleClicked(){
+}
+
+void buttonTripleClicked(){
+}
+
+void buttonPressed() {
+}
+
+void buttonReleased() {
+}
+
+void buttonLongPressed(){
+}
+
+void onStep() {
+	// (Work In Progress)
+	// discrete time logic here
+}
+
 void neighborChanged() {
+	// (Work In Progress)
 	// handles when a neighbor is changed
 	// (should also know which neighbors have been changed)
 }
 
-void buttonPressed() {
-	// handle button down here
-}
-
-void onStep() {
-	// discrete time logic here
-}
 
 ```
 
@@ -31,6 +48,8 @@ void onStep() {
 ```c
 int neighbors[6];
 // publicly accessible neighbor array, allows for quick simple access to any of the neighbors at all times
+// (Work In Progress)
+// for the time being, call getNeighbor(i) to get a neighbor's state
 ```
 
 ###Blink methods###
