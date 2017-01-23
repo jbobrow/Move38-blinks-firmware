@@ -7,7 +7,8 @@
 4. Open an example and press the checkmark to make sure it compiles
 5. Use an ISP of your choice and program your AutomaTiles!
 
-If you want to work w/ this BETA library and keep the legacy library handy do the following:
+###Instructions to have both Legacy and Beta libraries###
+If you want to work w/ this BETA library and keep the legacy library handy do the following
 1. Navigate to `~/Documents/Arduino/hardware`
 2. Remove the old AutomaTiles folder (if present)
 3. Get the Legacy AutomaTiles library
