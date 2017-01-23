@@ -9,14 +9,15 @@
 
 ###Instructions to have both Legacy and Beta libraries###
 If you want to work w/ this BETA library and keep the legacy library handy do the following
+
 1. Navigate to `~/Documents/Arduino/hardware`
 2. Remove the old AutomaTiles folder (if present)
 3. Get the Legacy AutomaTiles library
-    1. clone https://github.com/jbobrow/AutomaTiles
-    2. copy the library titled `AutomaTiles Legacy` inside of the `Arduino` folder to `~/Documents/Arduino/hardware/`
-4. Launch or quit and relaunch Arduino IDE
-5. In the top menu, go to `Tools > Board` and now you should see `AutomaTile` and `AutomaTile Legacy`
-6. Use the appropriate API for each library, check by compiling
+4. clone https://github.com/jbobrow/AutomaTiles
+5. copy the library titled `AutomaTiles Legacy` inside of the `Arduino` folder to `~/Documents/Arduino/hardware/`
+6. Launch or quit and relaunch Arduino IDE
+7. In the top menu, go to `Tools > Board` and now you should see `AutomaTile` and `AutomaTile Legacy`
+8. Use the appropriate API for each library, check by compiling
 
 ###API###
 
