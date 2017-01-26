@@ -366,10 +366,13 @@ void fadeUpdate(void) {
  * This sets up a basic blink animation, ms is the blink period in ms
  */
 void blink(const uint16_t ms){
-	ledMode = blinkMode;
-	blinking.status = false;
-	blinking.period = ms;
-	blinking.next = ms + getTimer();
+	//only update blink if the mode has changed or the timing has changed
+	if(ledMode != blinkMode || blinking.period != ms) {
+		ledMode = blinkMode;
+		blinking.status = false;
+		blinking.period = ms;
+		blinking.next = ms + getTimer();
+	}
 }
 
 void blinkUpdate(void) {
