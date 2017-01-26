@@ -250,6 +250,9 @@ void setColor(const uint8_t color[3]){
 }
 
 void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b){
+	// stop blinking or fading...
+	ledMode = stillMode;
+	// set color
 	outColor.r = r;
 	outColor.g = g;
 	outColor.b = b;
