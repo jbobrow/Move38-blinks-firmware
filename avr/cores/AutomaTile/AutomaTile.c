@@ -61,12 +61,13 @@ enum MODE mode = running;
 enum LEDMODE {
 	stillMode,
 	fadeMode,
+	fadeRainbowMode,
 	blinkMode,
 	pulseMode
 };
 enum LEDMODE ledMode = stillMode;
 
-struct Fading {
+struct fading {
 	hsv fromHSV;
 	hsv currHSV;
 	hsv toHSV;
@@ -78,6 +79,19 @@ struct Fading {
 	int16_t dt;	// time differential is the amound of discrete time steps per fade transition
 					// or the number of times that the LED will be refreshed for this transition
 } fading;
+
+struct fadingRainbow {
+	hsv fromHSV;
+	hsv currHSV;
+	hsv toHSV;
+	uint16_t fadeCntr;	// Counter used to end the fade transitions
+	uint8_t inc;	// Hue increment per transition
+	bool positiveIncrement;
+	int16_t error;	// Bressenham algorithm error to enable up to 32768ms delays
+	int16_t dh;	// hue differential and time differential
+	int16_t dt;	// time differential is the amound of discrete time steps per fade transition
+					// or the number of times that the LED will be refreshed for this transition
+} fadingRainbow;
 
 struct Blinking {
 	bool status; // blink status OFF or ON
@@ -250,7 +264,7 @@ void setColor(const uint8_t color[3]){
 }
 
 void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b){
-	// stop blinking or fading...
+	// stop blinking or fadingRainbow...
 	ledMode = stillMode;
 	// set color
 	outColor.r = r;
@@ -262,102 +276,110 @@ void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b){
  * Fade from current RGB color to RGB parameter, ms is the duration for the fade transition
  *
  */
+void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms){
+	
+}
+
+void fadeUpdate(void) {
+}	
+	
+/*
+ * Fade from current RGB color to RGB parameter, ms is the duration for the fade transition
+ *
+ */
 void fadeToRainbow(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms){
-	ledMode = fadeMode;
+	ledMode = fadeRainbowMode;
 
 	rgb toRGB = {r, g, b};
 	// Transform current and next color to HSV
-	fading.fromHSV = rgb2hsv(outColor);
-	fading.currHSV = fading.fromHSV;
-	fading.toHSV = rgb2hsv(toRGB);
+	fadingRainbow.fromHSV = rgb2hsv(outColor);
+	fadingRainbow.currHSV = fadingRainbow.fromHSV;
+	fadingRainbow.toHSV = rgb2hsv(toRGB);
 
-	fading.dt = ms/LED_REFRESHING_PERIOD;
-	fading.fadeCntr = fading.dt;
-	fading.error = 0;
+	fadingRainbow.dt = ms/LED_REFRESHING_PERIOD;
+	fadingRainbow.fadeCntr = fadingRainbow.dt;
+	fadingRainbow.error = 0;
 
-	fading.dh = abs(fading.fromHSV.h - fading.toHSV.h);
+	fadingRainbow.dh = abs(fadingRainbow.fromHSV.h - fadingRainbow.toHSV.h);
 
 	// Looking for the fastest route to reach the next Color
 	// if the increment is smaller than 180, that meeans that the shortest route is within a full circle (0 to 360 hue degrees)
 	// although if the increment is bigger than 180, that means that the shorter route will be over 360 or under 0 degrees
-	if (fading.dh < WHEEL_180) {
-		if (fading.fromHSV.h < fading.toHSV.h) {
-			fading.positiveIncrement = true;
+	if (fadingRainbow.dh < WHEEL_180) {
+		if (fadingRainbow.fromHSV.h < fadingRainbow.toHSV.h) {
+			fadingRainbow.positiveIncrement = true;
 		} else {
-			fading.positiveIncrement = false;
+			fadingRainbow.positiveIncrement = false;
 		}
 	} else { // Hue increment per update period is bigger than 180
-		if (fading.fromHSV.h < fading.toHSV.h) {
-			fading.positiveIncrement = false;
+		if (fadingRainbow.fromHSV.h < fadingRainbow.toHSV.h) {
+			fadingRainbow.positiveIncrement = false;
 		} else {
-			fading.positiveIncrement = true;
+			fadingRainbow.positiveIncrement = true;
 		}
 		// adjust increment for transitions that overflow the wheel
-		fading.dh = WHEEL_360 - fading.dh;
+		fadingRainbow.dh = WHEEL_360 - fadingRainbow.dh;
 	}
-	fading.inc = fading.dh / fading.fadeCntr;
+	fadingRainbow.inc = fadingRainbow.dh / fadingRainbow.fadeCntr;
 
 }
 
-/*void fadeToColor(const Color c, uint8_t ms){}
-void fadeToColorAndReturn(const Color c, uint8_t ms){}*/
-
-void fadeUpdate(void) {
+void fadeRainbowUpdate(void) {
 	// Output current color
-	outColor = hsv2rgb(fading.currHSV);
+	outColor = hsv2rgb(fadingRainbow.currHSV);
 	sendColor(LEDCLK, LEDDAT, outColor);
 	// Terminal bar
-	/*for (int i = 0; i < fading.currHSV.h; ++i) {
+	/*for (int i = 0; i < fadingRainbow.currHSV.h; ++i) {
 		printf("#");
 	}
 	printf("\n");*/
 
 	// Only fade if the number of led fade refreshes is bigger than 0!
-	if (fading.fadeCntr--) {
-		if (fading.positiveIncrement) {  // Positive increment moving clockwise along the Hue wheel
+	if (fadingRainbow.fadeCntr--) {
+		if (fadingRainbow.positiveIncrement) {  // Positive increment moving clockwise along the Hue wheel
 			// Detect and correct an color overflow hue value situation
-			if ((fading.currHSV.h + fading.inc) >= WHEEL_360) {
-				fading.currHSV.h = fading.currHSV.h + fading.inc - WHEEL_360;
+			if ((fadingRainbow.currHSV.h + fadingRainbow.inc) >= WHEEL_360) {
+				fadingRainbow.currHSV.h = fadingRainbow.currHSV.h + fadingRainbow.inc - WHEEL_360;
 			} else {
-				fading.currHSV.h += fading.inc;  // Increment current Hue value
+				fadingRainbow.currHSV.h += fadingRainbow.inc;  // Increment current Hue value
 				// Discretization double to int correction
 				// This solves casting and rounding issues using uint8_t.Based on Bressenham's algorithm
-				if (!fading.inc) { // Increment equal to 0
+				if (!fadingRainbow.inc) { // Increment equal to 0
 					// Bressenham's algorithm, incremental scan conversion algorithm
-				 	fading.error += 2*fading.dh;
-				 	if (fading.error > fading.dt) {
-				 		fading.currHSV.h++;
-				 		fading.error-= 2* fading.dt;
+				 	fadingRainbow.error += 2*fadingRainbow.dh;
+				 	if (fadingRainbow.error > fadingRainbow.dt) {
+				 		fadingRainbow.currHSV.h++;
+				 		fadingRainbow.error-= 2* fadingRainbow.dt;
 				 	}
 				// We look at the current value using rounded increment, and compared to the same equivalent increment from our
 				// target hue value, if smaller increment by 1.
-				 } else if (fading.currHSV.h < (fading.toHSV.h - fading.fadeCntr * fading.inc)){
-					fading.currHSV.h++;
+				 } else if (fadingRainbow.currHSV.h < (fadingRainbow.toHSV.h - fadingRainbow.fadeCntr * fadingRainbow.inc)){
+					fadingRainbow.currHSV.h++;
 				}
 			}
 		} else { // Negative increment moving counterclockwise along the Hue wheel
 			// Detect and correct negative overflows for hue values
-			if ((fading.currHSV.h - fading.inc) <= 0) {
-				fading.currHSV.h = fading.currHSV.h - fading.inc + WHEEL_360;
+			if ((fadingRainbow.currHSV.h - fadingRainbow.inc) <= 0) {
+				fadingRainbow.currHSV.h = fadingRainbow.currHSV.h - fadingRainbow.inc + WHEEL_360;
 			} else {
-				fading.currHSV.h -= fading.inc;
+				fadingRainbow.currHSV.h -= fadingRainbow.inc;
 				// This solves casting and rounding issues using uint8_t.Based on Bressenham's algorithm
-				if (!fading.inc) { // Increment equal to 0
+				if (!fadingRainbow.inc) { // Increment equal to 0
 					// Bressenham's algorithm
-				 	fading.error += 2*fading.dh;
-				 	if (fading.error > fading.dt)	{
-				 		fading.currHSV.h--;
-				 		fading.error-= 2* fading.dt;
+				 	fadingRainbow.error += 2*fadingRainbow.dh;
+				 	if (fadingRainbow.error > fadingRainbow.dt)	{
+				 		fadingRainbow.currHSV.h--;
+				 		fadingRainbow.error-= 2* fadingRainbow.dt;
 				 	}
-				} else if(fading.currHSV.h > ( (fading.toHSV.h + fading.fadeCntr * fading.inc) % WHEEL_360 ) ){
-					fading.currHSV.h--;
+				} else if(fadingRainbow.currHSV.h > ( (fadingRainbow.toHSV.h + fadingRainbow.fadeCntr * fadingRainbow.inc) % WHEEL_360 ) ){
+					fadingRainbow.currHSV.h--;
 				}
 			}
 		}
-		//printf("Hue = %d, Saturation = %d, Value = %d \n", wheelTo360(fading.currHSV.h), fading.currHSV.s, fading.currHSV.v);
+		//printf("Hue = %d, Saturation = %d, Value = %d \n", wheelTo360(fadingRainbow.currHSV.h), fadingRainbow.currHSV.s, fadingRainbow.currHSV.v);
 	} else {  // End of the fade to transition, return to send colors
 		ledMode = stillMode;
-		outColor = hsv2rgb(fading.toHSV);
+		outColor = hsv2rgb(fadingRainbow.toHSV);
 		//printf("Fade ending :)\n");
 	}
 }
@@ -460,6 +482,9 @@ void updateLed(void) {
 			break;
 		case fadeMode:
 			fadeUpdate();
+			break;
+		case fadeRainbowMode:
+			fadeRainbowUpdate();
 			break;
 		case blinkMode:
 			blinkUpdate();
