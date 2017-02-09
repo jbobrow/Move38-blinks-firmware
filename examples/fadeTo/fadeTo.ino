@@ -9,7 +9,7 @@
  
 void setup() {
    setColorRGB(255,255,255);
-   fadeTo(0,255,255, 5000);
+   fadeToRainbow(0,255,255, 5000);
 }
 
 void loop() {
@@ -26,7 +26,7 @@ void buttonTripleClicked(){
 
 void buttonPressed() {
    setColorRGB(255, 0, 0);
-   fadeTo(0,255,255, 5000);
+   fadeToRainbow(0,255,255, 5000);
 
 }
 

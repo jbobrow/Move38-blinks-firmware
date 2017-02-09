@@ -27,7 +27,7 @@ volatile static uint8_t soundEn = 1; //if true, react to sound
 // Pin mapping to arrange pins correctly on board
 const uint8_t pinMap[6] = {0,1,2,5,4,3};
 
-int32_t timeout = 10000; // s -> *1000ms
+int32_t timeout = 30000; // s -> *1000ms
 volatile static int32_t startTime = 0;
 volatile static int32_t sleepTimer = 0;
 volatile static uint32_t powerDownTimer = 0;
@@ -262,7 +262,7 @@ void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b){
  * Fade from current RGB color to RGB parameter, ms is the duration for the fade transition
  *
  */
-void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms){
+void fadeToRainbow(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms){
 	ledMode = fadeMode;
 
 	rgb toRGB = {r, g, b};

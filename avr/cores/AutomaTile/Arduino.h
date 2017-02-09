@@ -148,6 +148,7 @@ void setColor(const uint8_t color[3]);
 void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b);
 
 void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms);
+void fadeToRainbow(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms);
 //void fadeTo(const Color c, uint8_t ms);
 //void fadeTo(const Color c, uint8_t ms);
 
