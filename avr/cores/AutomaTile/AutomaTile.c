@@ -9,11 +9,13 @@
 #include <avr/interrupt.h>
 #include <avr/cpufunc.h>
 #include <avr/sleep.h>
+#include <util/delay.h>
 
 #include "Pins.h"
 #include "Inits.h"
 #include "AutomaTile.h"
 #include "color.h"
+#include "debug.h"
 
 volatile int16_t holdoff = 50;//for temporarily preventing click outputs
 volatile static uint8_t click = 0;//becomes non-zero when a click is detected
@@ -46,8 +48,6 @@ uint8_t datLen = 0;
 volatile uint16_t bitsRcvd = 0;//tracking number of bits received for retransmission/avoiding overflow
 volatile uint32_t modeStart = 0;
 
-const rgb dark = {0x00, 0x00, 0x00};
-const rgb wakeColor = {0xAA, 0x55, 0x00};
 volatile rgb outColor = {0x00, 0x00, 0xFF};
 
 enum MODE {
@@ -67,17 +67,26 @@ enum LEDMODE {
 };
 enum LEDMODE ledMode = stillMode;
 
-struct fading {
-	hsv fromHSV;
-	hsv currHSV;
-	hsv toHSV;
-	uint16_t fadeCntr;	// Counter used to end the fade transitions
-	uint8_t inc;	// Hue increment per transition
-	bool positiveIncrement;
+enum COLORS{
+	RED,
+	GREEN,
+	BLUE,
+	COLOR_MAX
+};
+
+typedef struct {
+	uint8_t currC; // Current color component
+	uint8_t toC;  // color component to go to
+	int8_t inc;	// Hue increment per transition
 	int16_t error;	// Bressenham algorithm error to enable up to 32768ms delays
-	int16_t dh;	// hue differential and time differential
-	int16_t dt;	// time differential is the amound of discrete time steps per fade transition
-					// or the number of times that the LED will be refreshed for this transition
+	int16_t dc;	// Red differential
+	uint16_t dt;	// time differential is the amound of discrete time steps per fade transition
+					// or the number of times that the LED will be refreshed for this transition	
+} Bressenham;
+
+struct Fading {
+	uint16_t fadeCntr;	// Counter used to end the fade transitions
+	Bressenham c[COLOR_MAX];
 } fading;
 
 struct fadingRainbow {
@@ -277,11 +286,114 @@ void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b){
  *
  */
 void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms){
-	
+	ledMode = fadeMode;
+	//rgb toRGB = {r, g, b};
+	// Transform current and next color to HSV
+	// fadingRainbow.fromHSV = rgb2hsv(outColor);
+	fading.c[RED].currC = outColor.r;
+	fading.c[GREEN].currC = outColor.g;
+	fading.c[BLUE].currC = outColor.b;
+	fading.c[RED].toC = r;
+	fading.c[GREEN].toC = g;
+	fading.c[BLUE].toC = b;
+	// fadingRainbow.toHSV = rgb2hsv(toRGB);
+
+	//printf("Fade from R = %d, G=%d, B= %d\n", outColor.r, outColor.g, outColor.b);
+	//printf("Fade to R = %d, G=%d, B= %d\n", r, g, b);
+
+	uint8_t i;
+	for (i = 0; i < COLOR_MAX; i++)	{
+		fading.c[i].dt = ms/LED_REFRESHING_PERIOD;
+		fading.fadeCntr = fading.c[i].dt;
+		// printf("Led Updates Per Period = %d\n", fading.fadeCntr);
+		fading.c[i].error = 0;
+		fading.c[i].dc = fading.c[i].toC - fading.c[i].currC;
+		if(fading.c[i].dc >= 0) {
+			debugBlinkColor(green);
+		} else {
+			debugBlinkColor(red);
+		}
+
+		fading.c[i].inc = fading.c[i].dc / fading.fadeCntr;
+
+		// printf("Color Diff = %d\n", fading.c[i].dc);	
+		// printf("Color Increment = %d\n", fading.c[i].inc);
+	}
+}
+
+
+void fadeUpdateRGBComponent(uint8_t color_index) {
+	// Make sure we never go beyon minimum (0) and maximum (255) limits
+	if ( (fading.c[color_index].currC + fading.c[color_index].inc) < 0 ) {
+		fading.c[color_index].currC = 0;
+	} else if ( (fading.c[color_index].currC + fading.c[color_index].inc) > 255 ) {
+		fading.c[color_index].currC = 255;
+	} else {
+		fading.c[color_index].currC = fading.c[color_index].currC + fading.c[color_index].inc;  // Increment current Hue value				
+		// Discretization double to int correction
+		// This solves casting and rounding issues using uint8_t.Based on Bressenham's algorithm
+		//printf("currR=%d < %d, toR=%d, cnt=%d, inc=%d \n", fading.currRGB.r,fading.toRGB.r - fading.fadeCntr * fading.inc,fading.toRGB.r, fading.fadeCntr, fading.inc);
+		if (fading.c[color_index].dc > 0) {
+			// Making sure we never pass over the RGB to value
+			if (fading.c[color_index].currC >= fading.c[color_index].toC) {
+				fading.c[color_index].currC = fading.c[color_index].toC;
+			} else if (!fading.c[color_index].inc) { // Increment equal to 0
+				// Bressenham's algorithm, incremental scan conversion algorithm
+			 	fading.c[color_index].error += 2*fading.c[color_index].dc;
+			 	if (fading.c[color_index].error > fading.c[color_index].dt) {
+			 		fading.c[color_index].currC = fading.c[color_index].currC + 1;
+			 		fading.c[color_index].error -= 2* fading.c[color_index].dt;
+			 	}
+			// We look at the current value using rounded increment, and compared to the same equivalent increment from our 
+			// target hue value, if smaller increment by 1.
+			} else if (fading.c[color_index].currC < (fading.c[color_index].toC - fading.fadeCntr * fading.c[color_index].inc)){
+				fading.c[color_index].currC = fading.c[color_index].currC + fading.c[color_index].inc;
+			}
+		} else { // dc >0
+			// Making sure we never pass over the RGB to value
+			if (fading.c[color_index].currC <= fading.c[color_index].toC) {
+				fading.c[color_index].currC = fading.c[color_index].toC;
+			} else if (!fading.c[color_index].inc) { // Increment equal to 0
+				// Bressenham's algorithm, incremental scan conversion algorithm
+			 	fading.c[color_index].error += 2*abs(fading.c[color_index].dc);
+			 	if (fading.c[color_index].error > fading.c[color_index].dt) {
+			 		fading.c[color_index].currC = fading.c[color_index].currC - 1;
+			 		fading.c[color_index].error-= 2* fading.c[color_index].dt;
+			 	}
+
+			} else if (fading.c[color_index].currC > (fading.c[color_index].toC - fading.fadeCntr * fading.c[color_index].inc)){
+				fading.c[color_index].currC = fading.c[color_index].currC + fading.c[color_index].inc;
+			}
+		}
+	}
 }
 
 void fadeUpdate(void) {
-}	
+	// Output current color 
+	//sendColor(LEDCLK, LEDDAT, outColor);
+	// Terminal bar
+	//printf("R = %d, G = %d, B = %d, cntr = %d \n", fading.c[RED].currC, fading.c[GREEN].currC, fading.c[BLUE].currC, fading.fadeCntr);
+	outColor.r = fading.c[RED].currC;
+	outColor.g = fading.c[GREEN].currC;
+	outColor.b = fading.c[BLUE].currC;
+	sendColor(LEDCLK, LEDDAT, outColor);
+	//for (int i = 0; i < fading.currRGB.r; ++i) {
+	//	printf("#");
+	//}
+	//printf("\n");
+	
+	// Only fade if the number of led fade refreshes is bigger than 0!
+	if (fading.fadeCntr--) {
+		uint8_t i;
+		for (i = 0; i < COLOR_MAX; i++)	{
+			fadeUpdateRGBComponent(i);
+		}
+	} else {  // End of the fade to transition, return to send colors
+		ledMode = stillMode;
+		//printf("Fade ending :)\n");
+	}
+}
+
 	
 /*
  * Fade from current RGB color to RGB parameter, ms is the duration for the fade transition
