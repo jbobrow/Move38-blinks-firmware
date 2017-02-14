@@ -5,8 +5,6 @@
 #include "debug.h"
 
 uint32_t prevTimer;
-const rgb transmitColor = {0xff, 0x55, 0x00};
-const rgb recieveColor = {0x00, 0xff, 0x55};
 
 static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmission of data
 
@@ -20,11 +18,7 @@ int main(void) {
 
 	uint8_t i=3;
 	while (i--) {
-		sendColor(LEDCLK, LEDDAT, powerupColor );
-		_delay_ms(200);
-		sendColor(LEDCLK, LEDDAT, black );
-		_delay_ms(200);
-		
+		debugBlinkBlue();
 	}
 	
 	setup();
@@ -59,10 +53,10 @@ int main(void) {
 				
 				if(timeoutDiff>timeout){
 					if(gt > gst)
-						debugBlinkColor(green);
+						debugBlinkGreen();
 					else
-						debugBlinkColor(red);
-					debugBlinkColor(blue);
+						debugBlinkRed();
+					debugBlinkBlue();
 					mode = sleep;
 					disAD();
 					DDRB &= ~IR;//Set direction in

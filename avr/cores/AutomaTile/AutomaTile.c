@@ -48,8 +48,6 @@ uint8_t datLen = 0;
 volatile uint16_t bitsRcvd = 0;//tracking number of bits received for retransmission/avoiding overflow
 volatile uint32_t modeStart = 0;
 
-volatile rgb outColor = {0x00, 0x00, 0xFF};
-
 enum MODE {
 	sleep,
 	running,
@@ -244,7 +242,7 @@ void tileSetup(void){
 	//Initialization routines
 	initIO();
 	setPort(&PORTB);
-	sendColor(LEDCLK,LEDDAT,dark);
+	sendColor(LEDCLK,LEDDAT,black);
 	sei();
 	//initAD();
 	initTimer();
@@ -309,9 +307,9 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 		fading.c[i].error = 0;
 		fading.c[i].dc = fading.c[i].toC - fading.c[i].currC;
 		if(fading.c[i].dc >= 0) {
-			debugBlinkColor(green);
+			debugBlinkGreen();
 		} else {
-			debugBlinkColor(red);
+			debugBlinkRed();
 		}
 
 		fading.c[i].inc = fading.c[i].dc / fading.fadeCntr;
@@ -513,7 +511,7 @@ void blinkUpdate(void) {
 	if ((blinking.next-getTimer()) > blinking.period) {
 		if (blinking.status) { // On to Off
 			//printf("OFF\n" );
-			sendColor(LEDCLK, LEDDAT, dark);
+			sendColor(LEDCLK, LEDDAT, black);
 			blinking.status = false;
 		} else {  // Off to On
 			//printf("ON\n");

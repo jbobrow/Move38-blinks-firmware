@@ -4,6 +4,15 @@
 
 #include "color.h"
 
+const rgb wakeColor = {0xAA, 0x55, 0x00};
+volatile rgb outColor = {0x00, 0x00, 0xFF};
+const rgb red = {0xff, 0, 0};
+const rgb green = {0, 0xff, 0};
+const rgb blue = {0, 0, 0xff};
+const rgb transmitColor = {0xff, 0x55, 0x00};
+const rgb recieveColor = {0x00, 0xff, 0x55};
+const rgb black = {0x00, 0x00, 0x00};
+
 rgb hsv2rgb(hsv in){
     rgb out;
     uint8_t region, p, q, t;
