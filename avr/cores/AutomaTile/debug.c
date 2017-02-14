@@ -1,6 +1,7 @@
 #include "color.h"
 #include "Pins.h"
 #include "avr/delay.h"
+
 void debugBlinkRed(void){
 	debugBlinkColor(red);
 }

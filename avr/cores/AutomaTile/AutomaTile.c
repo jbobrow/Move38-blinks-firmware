@@ -305,15 +305,19 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 		fading.fadeCntr = fading.c[i].dt;
 		// printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 		fading.c[i].error = 0;
-		fading.c[i].dc = fading.c[i].toC - fading.c[i].currC;
-		if(fading.c[i].dc >= 0) {
+		fading.c[i].dc = (int8_t)(fading.c[i].toC) - (int8_t)(fading.c[i].currC);
+
+		fading.c[i].inc = fading.c[i].dc / (int8_t)(fading.fadeCntr);
+
+		if(fading.c[i].inc > 0) {
 			debugBlinkGreen();
-		} else {
+		} else if (fading.c[i].inc < 0){
 			debugBlinkRed();
+		} else {
+			debugBlinkBlue();
 		}
 
-		fading.c[i].inc = fading.c[i].dc / fading.fadeCntr;
-
+		
 		// printf("Color Diff = %d\n", fading.c[i].dc);	
 		// printf("Color Increment = %d\n", fading.c[i].inc);
 	}
