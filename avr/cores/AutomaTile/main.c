@@ -14,12 +14,7 @@ int main(void) {
 	// Power on sequence - 3 short blue blinks
 	// so we can visually see when a reset happens
 
-	static rgb powerupColor = {0,0,255};
-
-	uint8_t i=3;
-	while (i--) {
-		debugBlinkBlue();
-	}
+	debugBlinkBlue();
 	
 	setup();
 

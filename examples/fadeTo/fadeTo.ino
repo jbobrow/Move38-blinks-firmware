@@ -26,7 +26,7 @@ void buttonTripleClicked(){
 }
 
 void buttonPressed() {
-   setColorRGB(255, 123, 0);
+   setColorRGB(255, 0, 0);
    fadeTo(0,0,255, 4000);
 
 }
@@ -35,5 +35,6 @@ void buttonReleased() {
 }
 
 void buttonLongPressed(){
+  blink(1000);
 }
 
