@@ -295,7 +295,7 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	fading.c[GREEN].toC = g;
 	fading.c[BLUE].toC = b;
 	// fadingRainbow.toHSV = rgb2hsv(toRGB);
-
+	
 	//printf("Fade from R = %d, G=%d, B= %d\n", outColor.r, outColor.g, outColor.b);
 	//printf("Fade to R = %d, G=%d, B= %d\n", r, g, b);
 
@@ -305,17 +305,25 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 		fading.fadeCntr = fading.c[i].dt;
 		// printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 		fading.c[i].error = 0;
-		fading.c[i].dc = (int8_t)(fading.c[i].toC) - (int8_t)(fading.c[i].currC);
-
+		fading.c[i].dc = (int16_t)(fading.c[i].toC) - (int16_t)(fading.c[i].currC);
+		
 		fading.c[i].inc = fading.c[i].dc / (int8_t)(fading.fadeCntr);
 
-		if(fading.c[i].inc > 0) {
+		/*if(fading.c[i].dc >= 0) {
+			debugBlinkGreen();
+		} else if (fading.c[i].dc < 0){
+			debugBlinkRed();
+		} else {
+			debugBlinkBlue();
+		}*/
+		
+		/*if(fading.c[i].inc > 0) {
 			debugBlinkGreen();
 		} else if (fading.c[i].inc < 0){
 			debugBlinkRed();
 		} else {
 			debugBlinkBlue();
-		}
+		}*/
 
 		
 		// printf("Color Diff = %d\n", fading.c[i].dc);	
@@ -327,15 +335,18 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 void fadeUpdateRGBComponent(uint8_t color_index) {
 	// Make sure we never go beyon minimum (0) and maximum (255) limits
 	if ( (fading.c[color_index].currC + fading.c[color_index].inc) < 0 ) {
+		// debugBlinkRed(); OK
 		fading.c[color_index].currC = 0;
 	} else if ( (fading.c[color_index].currC + fading.c[color_index].inc) > 255 ) {
+		// debugBlinkRed(); OK
 		fading.c[color_index].currC = 255;
 	} else {
-		fading.c[color_index].currC = fading.c[color_index].currC + fading.c[color_index].inc;  // Increment current Hue value				
+		fading.c[color_index].currC = fading.c[color_index].currC + fading.c[color_index].inc;  // Increment current Hue value
 		// Discretization double to int correction
 		// This solves casting and rounding issues using uint8_t.Based on Bressenham's algorithm
 		//printf("currR=%d < %d, toR=%d, cnt=%d, inc=%d \n", fading.currRGB.r,fading.toRGB.r - fading.fadeCntr * fading.inc,fading.toRGB.r, fading.fadeCntr, fading.inc);
 		if (fading.c[color_index].dc > 0) {
+			//debugBlinkRed(); Aqui!
 			// Making sure we never pass over the RGB to value
 			if (fading.c[color_index].currC >= fading.c[color_index].toC) {
 				fading.c[color_index].currC = fading.c[color_index].toC;
