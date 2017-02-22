@@ -2,28 +2,11 @@
 #include <Arduino.h>
 #include "color.h"
 #include "APA102C.h"
-
-#include <util/delay.h>
+#include "debug.h"
 
 uint32_t prevTimer;
-const rgb black = {0x00, 0x00, 0x00};
-const rgb transmitColor = {0xff, 0x55, 0x00};
-const rgb recieveColor = {0x00, 0xff, 0x55};
-const rgb red = {0xff, 0, 0};
-const rgb green = {0, 0xff, 0};
-const rgb blue = {0, 0, 0xff};
 
 static uint8_t seqNum = 0;//Sequence number used to prevent circular retransmission of data
-
-void debugBlinkColor(const rgb c){
-	uint8_t i=4;
-	while (i--) {
-		sendColor(LEDCLK, LEDDAT, c);
-		_delay_ms(100);
-		sendColor(LEDCLK, LEDDAT, black);
-		_delay_ms(100);	
-	}
-}
 
 int main(void) {
 	tileSetup();
@@ -31,16 +14,7 @@ int main(void) {
 	// Power on sequence - 3 short blue blinks
 	// so we can visually see when a reset happens
 
-	static rgb powerupColor = {0,0,255};
-
-	uint8_t i=3;
-	while (i--) {
-		sendColor(LEDCLK, LEDDAT, powerupColor );
-		_delay_ms(200);
-		sendColor(LEDCLK, LEDDAT, black );
-		_delay_ms(200);
-		
-	}
+	debugBlinkBlue();
 	
 	setup();
 
@@ -74,10 +48,10 @@ int main(void) {
 				
 				if(timeoutDiff>timeout){
 					if(gt > gst)
-						debugBlinkColor(green);
+						debugBlinkGreen();
 					else
-						debugBlinkColor(red);
-					debugBlinkColor(blue);
+						debugBlinkRed();
+					debugBlinkBlue();
 					mode = sleep;
 					disAD();
 					DDRB &= ~IR;//Set direction in

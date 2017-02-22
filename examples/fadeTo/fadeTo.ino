@@ -8,8 +8,9 @@
  */
  
 void setup() {
-   setColorRGB(255,255,255);
-   fadeTo(0,255,255, 5000);
+   setColorRGB(0,255,0);
+   int i = 0;
+   fadeTo(0,0,255, 4000);
 }
 
 void loop() {
@@ -26,7 +27,7 @@ void buttonTripleClicked(){
 
 void buttonPressed() {
    setColorRGB(255, 0, 0);
-   fadeTo(0,255,255, 5000);
+   fadeTo(0,0,255, 4000);
 
 }
 
@@ -34,5 +35,6 @@ void buttonReleased() {
 }
 
 void buttonLongPressed(){
+  blink(1000);
 }
 

@@ -38,4 +38,13 @@ typedef struct {
 hsv rgb2hsv(rgb in);
 rgb hsv2rgb(hsv in);
 
+extern const rgb wakeColor;
+extern volatile rgb outColor;
+extern const rgb red;
+extern const rgb green;
+extern const rgb blue;
+extern const rgb transmitColor;
+extern const rgb recieveColor;
+extern const rgb black;
+
 #endif /* COLOR_H_ */
