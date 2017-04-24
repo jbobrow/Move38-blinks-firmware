@@ -1,13 +1,13 @@
-##Move38 Blinks Firmware – AutomaTile##
+## Move38 Blinks Firmware – AutomaTile
 
-###Instructions for using the Arduino IDE w/ AutomaTiles###
+### Instructions for using the Arduino IDE w/ AutomaTiles
 1. Clone this repo into your Arduino directory `~/Documents/Arduino/hardware/`
 2. Launch or quit and relaunch Arduino IDE
 3. In the top menu, go to `Tools > Board` and select `AutomaTile`
 4. Open an example and press the checkmark to make sure it compiles
 5. Use an ISP of your choice and program your AutomaTiles!
 
-###Instructions to have both Legacy and Beta libraries###
+### Instructions to have both Legacy and Beta libraries
 If you want to work w/ this BETA library and keep the legacy library handy do the following
 
 1. Navigate to `~/Documents/Arduino/hardware`
@@ -19,11 +19,11 @@ If you want to work w/ this BETA library and keep the legacy library handy do th
 7. In the top menu, go to `Tools > Board` and now you should see `AutomaTile` and `AutomaTile Legacy`
 8. Use the appropriate API for each library, check by compiling
 
-###API###
+### API
 
 [Here is a link to the API](API.md) (Work in Progress)
 
-###Examples###
+### Examples
 
 The following examples are written using the AutomaTiles API for the Arduino IDE.
 
