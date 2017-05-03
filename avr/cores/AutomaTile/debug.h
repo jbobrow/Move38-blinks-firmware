@@ -1,8 +1,8 @@
 /*
  * Debug.h
  *
- */ 
-#include <avr/delay.h>
+ */
+#include <util/delay.h>
 
 #ifndef DEBUG_H_
 #define DEBUG_H_

@@ -3,7 +3,7 @@
  *
  * Created: 7/15/2015 11:55:59
  *  Author: Joshua
- */ 
+ */
 
 #include "Inits.h"
 
@@ -67,4 +67,3 @@ void initTimer(){//Set up global .1ms timer used for various protocols
 	OCR0A = 125; //125 cycles at 125kHZ = 1ms
 	TIMSK0 = (0<<OCIE0B)|(1<<OCIE0A)|(0<<TOIE0);//Only enable OC Match A interrupt
 }
-

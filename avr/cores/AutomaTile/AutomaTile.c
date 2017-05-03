@@ -18,28 +18,28 @@
 #include "debug.h"
 
 volatile int16_t holdoff = 50;//for temporarily preventing click outputs
-volatile static uint8_t click = 0;//becomes non-zero when a click is detected
-volatile static uint8_t sync = 0;//becomes non-zero when synchronization pulses need to be sent out
-volatile static uint8_t state = 0;//current state of tile
-volatile static uint32_t timer = 0;//.1 ms timer tick
-volatile static uint32_t times[6][4];//ring buffer for holding leading  detection edge times for the phototransistors
-volatile static uint8_t timeBuf[6];//ring buffer indices
-volatile static uint8_t soundEn = 1; //if true, react to sound
+static volatile uint8_t step = 0;//becomes non-zero when a step is detected
+static volatile uint8_t sync = 0;//becomes non-zero when synchronization pulses need to be sent out
+static volatile uint8_t state = 0;//current state of tile
+static volatile uint32_t timer = 0;//.1 ms timer tick
+static volatile uint32_t times[6][4];//ring buffer for holding leading  detection edge times for the phototransistors
+static volatile uint8_t timeBuf[6];//ring buffer indices
+static volatile uint8_t soundEn = 1; //if true, react to sound
 
 // Pin mapping to arrange pins correctly on board
 const uint8_t pinMap[6] = {0,1,2,5,4,3};
 
 int32_t timeout = 30000; // s -> *1000ms
-volatile static int32_t startTime = 0;
-volatile static int32_t sleepTimer = 0;
-volatile static uint32_t powerDownTimer = 0;
+static volatile uint32_t startTime = 0;
+static volatile uint32_t sleepTimer = 0;
+static volatile uint32_t powerDownTimer = 0;
 volatile uint8_t wake = 0;
 
-volatile static uint16_t longPressTimer = 0;
-volatile static uint16_t longPressTime = 1000;//1 second default
+static volatile uint16_t longPressTimer = 0;
+static volatile uint16_t longPressTime = 1000;//1 second default
 
-volatile static uint16_t clickDetectionTimer = 0;
-volatile static uint16_t clickdetectionTime = 330;	//330ms default
+static volatile uint16_t clickDetectionTimer = 0;
+static volatile uint16_t clickdetectionTime = 330;	//330ms default
 
 volatile uint8_t progDir = 0;//direction to pay attention to during programming. Set to whichever side put the module into program mode.
 volatile uint8_t* comBuf;//buffer for holding communicated messages when programming rules (oversized)
@@ -79,7 +79,7 @@ typedef struct {
 	int16_t error;	// Bressenham algorithm error to enable up to 32768ms delays
 	int16_t dc;	// Red differential
 	uint16_t dt;	// time differential is the amound of discrete time steps per fade transition
-					// or the number of times that the LED will be refreshed for this transition	
+					// or the number of times that the LED will be refreshed for this transition
 } Bressenham;
 
 struct Fading {
@@ -260,14 +260,14 @@ void emptyCB(void){
 	return;
 }
 
-cb_func clickCB = emptyCB;
+cb_func stepCB = emptyCB;
 cb_func timerCB = emptyCB;
 
 volatile uint16_t timerCBcount = 0;
 volatile uint16_t timerCBtime = UINT16_MAX;
 
 void setColor(const uint8_t color[3]){
-	setColorRGB(outColor.r, outColor.g, outColor.b);
+	setColorRGB(color[0], color[1], color[2]);
 }
 
 void setColorRGB(const uint8_t r, const uint8_t g, const uint8_t b){
@@ -295,7 +295,7 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 	fading.c[GREEN].toC = g;
 	fading.c[BLUE].toC = b;
 	// fadingRainbow.toHSV = rgb2hsv(toRGB);
-	
+
 	//printf("Fade from R = %d, G=%d, B= %d\n", outColor.r, outColor.g, outColor.b);
 	//printf("Fade to R = %d, G=%d, B= %d\n", r, g, b);
 
@@ -306,7 +306,7 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 		// printf("Led Updates Per Period = %d\n", fading.fadeCntr);
 		fading.c[i].error = 0;
 		fading.c[i].dc = (int16_t)(fading.c[i].toC) - (int16_t)(fading.c[i].currC);
-		
+
 		fading.c[i].inc = fading.c[i].dc / (int8_t)(fading.fadeCntr);
 
 		/*if(fading.c[i].dc >= 0) {
@@ -316,7 +316,7 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 		} else {
 			debugBlinkBlue();
 		}*/
-		
+
 		/*if(fading.c[i].inc > 0) {
 			debugBlinkGreen();
 		} else if (fading.c[i].inc < 0){
@@ -325,8 +325,8 @@ void fadeTo(const uint8_t r, const uint8_t g, const uint8_t b, const uint16_t ms
 			debugBlinkBlue();
 		}*/
 
-		
-		// printf("Color Diff = %d\n", fading.c[i].dc);	
+
+		// printf("Color Diff = %d\n", fading.c[i].dc);
 		// printf("Color Increment = %d\n", fading.c[i].inc);
 	}
 }
@@ -357,7 +357,7 @@ void fadeUpdateRGBComponent(uint8_t color_index) {
 			 		fading.c[color_index].currC = fading.c[color_index].currC + 1;
 			 		fading.c[color_index].error -= 2* fading.c[color_index].dt;
 			 	}
-			// We look at the current value using rounded increment, and compared to the same equivalent increment from our 
+			// We look at the current value using rounded increment, and compared to the same equivalent increment from our
 			// target hue value, if smaller increment by 1.
 			} else if (fading.c[color_index].currC < (fading.c[color_index].toC - fading.fadeCntr * fading.c[color_index].inc)){
 				fading.c[color_index].currC = fading.c[color_index].currC + fading.c[color_index].inc;
@@ -382,7 +382,7 @@ void fadeUpdateRGBComponent(uint8_t color_index) {
 }
 
 void fadeUpdate(void) {
-	// Output current color 
+	// Output current color
 	//sendColor(LEDCLK, LEDDAT, outColor);
 	// Terminal bar
 	//printf("R = %d, G = %d, B = %d, cntr = %d \n", fading.c[RED].currC, fading.c[GREEN].currC, fading.c[BLUE].currC, fading.fadeCntr);
@@ -394,7 +394,7 @@ void fadeUpdate(void) {
 	//	printf("#");
 	//}
 	//printf("\n");
-	
+
 	// Only fade if the number of led fade refreshes is bigger than 0!
 	if (fading.fadeCntr--) {
 		uint8_t i;
@@ -407,7 +407,7 @@ void fadeUpdate(void) {
 	}
 }
 
-	
+
 /*
  * Fade from current RGB color to RGB parameter, ms is the duration for the fade transition
  *
@@ -650,7 +650,7 @@ void sendStep(){
 			done = 1;
 		}
 	}
-	clickCB();
+	stepCB();
 }
 
 void setSharedDataBuffer(uint8_t* comb,uint8_t* datb , uint8_t len){
@@ -670,11 +670,11 @@ uint8_t getSharedData(uint8_t i){
 //Timer interrupt occurs every 1 ms
 //Increments timer and controls IR LEDs to keep their timing consistent
 ISR(TIM0_COMPA_vect){
-	volatile static uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
-	volatile static uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
-	volatile static bool pressed = false; // used to differenciate between button pressed and released states
-	volatile static bool multipleClicks = false; // used to trigger multi clicks detection
-	volatile static uint8_t numClicks = 0; // Counter for how many clicks have been pressed
+	static volatile uint8_t IRcount = 0;//Tracks cycles for accurate IR LED timing
+	static volatile uint8_t sendState = 0;//State currently being sent. only updates on pulse to ensure accurate states are sent
+	static volatile bool pressed = false; // used to differenciate between button pressed and released states
+	static volatile bool multipleClicks = false; // used to trigger multi clicks detection
+	static volatile uint8_t numClicks = 0; // Counter for how many clicks have been pressed
 	timer++;
 
 	timerCBcount++;
@@ -684,11 +684,11 @@ ISR(TIM0_COMPA_vect){
 	}
 
 	if(mode==running){
-		//check if a click has happened and call appropriate function
-		if(click){
-			clickCB();
+		//check if a step has happened and call appropriate function
+		if(step){
+			stepCB();
 			holdoff = 100;
-			click = 0;
+			step = 0;
 		}
 
 		IRcount++;
@@ -835,7 +835,7 @@ ISR(TIM0_COMPA_vect){
 			PORTA &= ~POWER;
 			wake = 2;
 		}else if (wake == 2){
-			if(startDiff>250){
+			if(startDiff>250){		// wait 250ms since neighbor woke, to animate wake sequence
 				wake=3;
 			}
 		}else if (wake == 3){
@@ -888,26 +888,15 @@ ISR(PCINT0_vect){
 		uint8_t i;
 		for(i = 0; i < 6; i++){
 			if(newOn & 1<<i){ //if an element is newly on,
-				if(timer-times[i][timeBuf[i]]<10){//This is a rapid pulse. treat like a click
+				if(timer-times[i][timeBuf[i]]<10){//This is a rapid pulse. treat like a step
 					pulseCount[i]++;
 					wake = 1;
 					if(pulseCount[i]==2){
 						if(holdoff==0){
-							click = 1;
+							step = 1;
 							sync = 3;
 							sleepTimer = timer;
 						}
-					}
-					if(pulseCount[i]>=4){//There have been 4 quick pulses. Enter programming mode.
-						click = 0;
-						sync = 0;
-						mode = recieving;
-						progDir = i;
-						int j;
-						for(j = 0; j < datLen; j++){//zero out buffer
-							comBuf[j]=0;
-						}
-						msgNum = 0;
 					}
 				}else{//Normally timed pulse, process normally
 					pulseCount[i]=0;
@@ -917,71 +906,7 @@ ISR(PCINT0_vect){
 				}
 			}
 		}
-	}else if(mode == recieving){
-		modeStart = timer;
-		if(((prevVals^vals)&(1<<progDir))){//programming pin has changed
-			if(timer-oldTime > (3*PULSE_WIDTH)/2){//an edge we care about
-				if(timer-oldTime > 4*PULSE_WIDTH){//first bit. use for sync
-					bitsRcvd = 0;
-				}
-				oldTime = timer;
-				if(bitsRcvd<8){
-					uint8_t bit = ((vals&(1<<progDir))>>progDir);
-					msgNum |= bit<<(bitsRcvd%8);
-					bitsRcvd++;
-				}else	if(bitsRcvd<datLen*8+8){
-					uint8_t bit = ((vals&(1<<progDir))>>progDir);
-					comBuf[bitsRcvd/8-1] |= bit<<(bitsRcvd%8);
-					bitsRcvd++;
-				}
-			}
-		}
 	}
 
 	prevVals = vals;
-}
-//ADC conversion complete interrupt
-//Calculates a running median for zeroing out signal
-//Then calculates a running median of deltas from the median to check for exceptional events
-//If a delta is very high compared to the median, a click is detected and click is set to non-0
-ISR(ADC_vect){
-	//Values saved for derivative calculation
-	static uint16_t median = 1<<15;
-	static uint16_t medDelta = 1<<5;
-
-	uint8_t adc;
-
-	adc = ADCH;// Record ADC value
-
-	//update running median. Error on high side.
-	//note that due to comparison, the median is scaled up by 2^8
-	if((adc<<8)<median){
-		median--;
-		}else{
-		median++;
-	}
-	uint16_t delta;
-	if(median > (adc<<8)){// Calculate delta
-		delta = (median>>8)-adc;
-		}else{
-		delta = adc-(median>>8);
-	}
-
-	//Update running delta median. Error on high side.
-	//note that due to comparison, the median is scaled up by 2^4=16
-	if((delta<<4)<medDelta && medDelta > 10){
-		medDelta--;
-		}else{
-		medDelta++;
-	}
-
-	if(holdoff == 0){//holdoff can be set elsewhere to disable click being set for a period of time
-		if(medDelta < delta){//check for click. as the median delta is scaled up by 16, an exceptional event is needed.
-			if(soundEn){
-				click = delta;//Board triggered click as soon as it could (double steps)
-				sync = 3;
-				sleepTimer = timer;
-			}
-		}
-	}
 }

@@ -65,6 +65,18 @@ void setTimeout(uint32_t seconds);
 void setMicOn();
 void setMicOff();
 
+// Button management callback functions
+void buttonPressed(void);
+void buttonLongPressed(void);
+void buttonReleased(void);
+void buttonClicked(void);
+void buttonDoubleClicked(void);
+void buttonTripleClicked(void);
+
+// gets rid of implicit declaration warning
+void updateLed(void);
+void disAD(void);
+
 #define PULSE_WIDTH 8
 extern volatile int16_t holdoff;
 //extern uint8_t outColor[3];
