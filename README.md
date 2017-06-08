@@ -23,6 +23,10 @@ If you want to work w/ this BETA library and keep the legacy library handy do th
 
 [Here is a link to the API](API.md) (Work in Progress)
 
+### Game Design
+
+[Here is a link to a General Overview and Game Design document](GAME_DESIGN.md) (Work in Progress)
+
 ### Examples
 
 The following examples are written using the AutomaTiles API for the Arduino IDE.
