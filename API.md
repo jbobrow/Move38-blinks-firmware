@@ -1,4 +1,4 @@
-##Blinks API##
+## Blinks API ##
 
 A simple API for programming Blink tiles to perform needed tasks
 **A default blank sketch**
@@ -42,7 +42,7 @@ void neighborChanged() {
 
 ```
 
-###Blink global variables###
+### Blink global variables ###
 
 **neighbors**
 ```c
@@ -52,7 +52,7 @@ int neighbors[6];
 // for the time being, call getNeighbor(i) to get a neighbor's state
 ```
 
-###Blink methods###
+### Blink methods ###
 **setState**
 ```c
 void setState(int n);
@@ -79,7 +79,7 @@ boolean isAlone();
 // same as checking all 6 sides and seeing that they return 0
 ```
 
-###Blink display manager methods###
+### Blink display manager methods ###
 These functions should not be used in `loop` since they will handle animation on their own.
 Use them in a callback, for example, when the button is pressed, `fadeToAndReturn(255, 0, 0, 500);` will turn red over the course of half a second and then return to its previous color.
 
@@ -108,7 +108,7 @@ void pulse(int ms, int min, int max); // TODO: phase w/ low and high brightness
 void pulse(int ms, int[n][3] c); // TODO: phased pulse between colors (depends on fadeTo)
 ```
 
-###Blink callbacks###
+### Blink callbacks ###
 
 **neighborChanged**
 ```c
