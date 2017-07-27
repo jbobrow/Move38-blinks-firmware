@@ -108,6 +108,9 @@ boolean isAlone();
 These functions should not be used in `loop` since they will handle animation on their own.
 Use them in a callback, for example, when the button is pressed, `fade(255, 0, 0, 500);` will turn red over the course of half a second. Calling two fade functions in a row will add them to the queue and animations will happen in sequence. setColor automatically clears the queue.
 
+**Sequenced Animations**
+In the case of an animation that has a certain number of instructions to perform (i.e. blink 5 times or pulse 3 times), these will be added to a queue so that they operate sequentially. If the queue is cleared, the next display function called will take effect immediately. Fade is assumed to be instructions for a duration of the entire fade. 
+
 **clear**
 ```c
 void clear(); // clear stops any animation and is basically a setColor() on each LED to pause where it is at and to empty the queue of animations
@@ -122,25 +125,25 @@ void fadeSide(int sideID, int r, int g, int b, int ms);  // timed change to colo
 
 **blink**
 ```c
-void blink(int ms); // defaults to on/off of current color
+void blink(int ms, int n); // blinks a number(n) of times defaults to on/off of current color over a period(ms)
 
-void blinkTo(int r, int g, int b, int ms); // blinks between current color and color passed as parameter (i.e. red and blue flashing)
+void blinkTo(int r, int g, int b, int ms, int n); // blinks between current color and color passed as parameter (i.e. red and blue flashing)
 
-void blinkSide(int sideID, int ms); // defaults to on/off of current color
+void blinkSide(int sideID, int ms, int n); // defaults to on/off of current color
 
-void blinkSideTo(int sideID, int r, int g, int b, int ms); // blinks between current color and color passed for a specific side
+void blinkSideTo(int sideID, int r, int g, int b, int ms, int n); // blinks between current color and color passed for a specific side
 
 ```
 
 **pulse**
 ```c
-void pulse(int ms); // pulses between on/off of current color over a period(ms)
+void pulse(int ms, int n); // pulses between on/off of current color over a period(ms)
 
-void pulseTo(int r, int g, int b, int ms); // pulses between on/off of current color over a period(ms)
+void pulseTo(int r, int g, int b, int ms, int n); // pulses between on/off of current color over a period(ms)
 
-void pulseSide(int sideID, int ms); // pulses between on/off of current color over a period(ms) for a specific side
+void pulseSide(int sideID, int ms, int n); // pulses between on/off of current color over a period(ms) for a specific side
 
-void pulseSideTo(int sideID, int r, int g, int b, int ms); // pulses between on/off of current color over a period(ms) for a specific side
+void pulseSideTo(int sideID, int r, int g, int b, int ms, int n); // pulses between on/off of current color over a period(ms) for a specific side
 ```
 
 ### Blink callbacks
