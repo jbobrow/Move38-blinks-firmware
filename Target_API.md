@@ -56,13 +56,20 @@ int neighbors[6];
 **setState**
 ```c
 void setState(int n);
-// sets the local state of the tile, which is communicated to other tiles ~30Hz
+// sets the local state of the tile, which is communicated to other tiles
+```
+
+**setSideState [EXPERIMENTAL]**
+```c
+void setSideState(int sideID, int n);
+// sets the state on a specific side
+// this could be used for telling different neighbors different things (too much possibility here)
 ```
 
 **getState**
 ```c
 int getState();
-// gets the local state of the tile, which is communicated to other tiles ~30Hz
+// gets the local state of the tile, which is communicated to other tiles
 ```
 
 **setColor**
@@ -71,10 +78,16 @@ void setColor(int r, int g, int b);
 // instantly changes the color of the RGB LED to the values passed
 ```
 
-**getColor**
+**setSideColor**
 ```c
-int[3] getColor();
-// returns the current RGB values of the LED in an array
+void setColorSide(int sideID, int r, int g, int b);
+// instantly changes the color of the RGB LED on a single side to the values passed
+```
+
+**getSideColor**
+```c
+int[3] getColorSide(int sideID);
+// returns the current RGB values of the specific LED in an array
 ```
 
 **sendStep**
@@ -93,40 +106,52 @@ boolean isAlone();
 
 ### Blink display manager methods
 These functions should not be used in `loop` since they will handle animation on their own.
-Use them in a callback, for example, when the button is pressed, `fadeToAndReturn(255, 0, 0, 500);` will turn red over the course of half a second and then return to its previous color.
+Use them in a callback, for example, when the button is pressed, `fade(255, 0, 0, 500);` will turn red over the course of half a second. Calling two fade functions in a row will add them to the queue and animations will happen in sequence. setColor automatically clears the queue.
+
+**clear**
+```c
+void clear(); // clear stops any animation and is basically a setColor() on each LED to pause where it is at and to empty the queue of animations
+```
 
 **fadeTo**
 ```c
-void fadeTo(int r, int g, int b, int ms);  // timed change to color
+void fade(int r, int g, int b, int ms);  // timed change to color
 
-void fadeToAndReturn(int r, int g, int b, int ms);  // timed change to color and back
+void fadeSide(int sideID, int r, int g, int b, int ms);  // timed change to color for a single side
 ```
 
 **blink**
 ```c
 void blink(int ms); // defaults to on/off of current color
 
-void blink(int ms, int min, int max); // TODO: low and high levels for blinking and the time between them
+void blinkTo(int r, int g, int b, int ms); // blinks between current color and color passed as parameter (i.e. red and blue flashing)
 
-void blink(int ms, int[n][3] c); // TODO: (low priority) send array of colors to blink between
+void blinkSide(int sideID, int ms); // defaults to on/off of current color
+
+void blinkSideTo(int sideID, int r, int g, int b, int ms); // blinks between current color and color passed for a specific side
+
 ```
 
 **pulse**
 ```c
-void pulse(int ms); // phase
+void pulse(int ms); // pulses between on/off of current color over a period(ms)
 
-void pulse(int ms, int min, int max); // TODO: phase w/ low and high brightness
+void pulseTo(int r, int g, int b, int ms); // pulses between on/off of current color over a period(ms)
 
-void pulse(int ms, int[n][3] c); // TODO: phased pulse between colors (depends on fadeTo)
+void pulseSide(int sideID, int ms); // pulses between on/off of current color over a period(ms) for a specific side
+
+void pulseSideTo(int sideID, int r, int g, int b, int ms); // pulses between on/off of current color over a period(ms) for a specific side
 ```
 
 ### Blink callbacks
 
 **neighborChanged**
 ```c
-void neighborChanged();
+void neighborChanged(int[] neighborID);
 // handles when a neighbor is changed
 // (should also know which neighbors have been changed)
+// array of neighborIDs that changed
+// another option could be to call this function for each neighbor as it changes... but that could set up weird race conditions
 ```
 
 **onStep**
